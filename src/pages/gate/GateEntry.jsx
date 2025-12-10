@@ -3,38 +3,104 @@ import { useAppContext } from '../../context/AppContext';
 import { FiSearch, FiX, FiCheckCircle, FiClock } from 'react-icons/fi';
 import { MdConfirmationNumber } from 'react-icons/md';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 const GateEntry = () => {
-  const { bookings, updateBooking } = useAppContext();
+  const { user } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResult, setSearchResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [peopleCount, setPeopleCount] = useState(1);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchTerm.trim()) return;
     
     setLoading(true);
-    setTimeout(() => {
-      const booking = bookings.find(b => 
-        b.id.toLowerCase() === searchTerm.toLowerCase() ||
-        b.buyerPhone === searchTerm ||
-        b.qrCodeValue === searchTerm ||
-        b.buyerName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setSearchResult(booking || 'not_found');
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Try multiple search parameters
+      const searchParams = {
+        booking_id: searchTerm,
+        buyer_phone: searchTerm,
+        buyer_name: searchTerm,
+        search: searchTerm
+      };
+      
+      const response = await fetch(`${API_URL}/api/entry/search`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(searchParams)
+      });
+      
+      if (response.ok) {
+        const booking = await response.json();
+        setSearchResult(booking);
+        setPeopleCount(1);
+      } else {
+        // Fallback: try direct booking search
+        const bookingResponse = await fetch(`${API_URL}/api/bookings`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (bookingResponse.ok) {
+          const bookings = await bookingResponse.json();
+          const found = bookings.find(b => 
+            b.booking_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            b.buyer_phone === searchTerm ||
+            b.buyer_name?.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          
+          if (found) {
+            setSearchResult(found);
+            setPeopleCount(1);
+          } else {
+            setSearchResult('not_found');
+          }
+        } else {
+          setSearchResult('not_found');
+        }
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResult('not_found');
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
-  const handleCheckIn = () => {
+  const handleCheckIn = async () => {
     if (searchResult && searchResult !== 'not_found') {
-      const updates = { 
-        checkedIn: true, 
-        checkedInAt: new Date().toISOString(),
-        scannedBy: 'Gate Staff',
-        peopleEntered: searchResult.totalPeople
-      };
-      updateBooking(searchResult.id, updates);
-      setSearchResult({ ...searchResult, ...updates });
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/entry/checkin`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            booking_id: searchResult._id,
+            people_entered: peopleCount,
+            scanned_by: user?.name || 'Gate Staff'
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          setSearchResult({ ...searchResult, checked_in: true, people_entered: (searchResult.people_entered || 0) + peopleCount });
+          alert(`Check-in successful! ${peopleCount} people entered.`);
+        }
+      } catch (error) {
+        console.error('Check-in error:', error);
+        alert('Check-in failed. Please try again.');
+      }
     }
   };
 
@@ -100,8 +166,8 @@ const GateEntry = () => {
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold">{searchResult.passType} Pass</h2>
-                <p className="text-blue-100 mt-1">Pass ID: {searchResult.id}</p>
+                <h2 className="text-xl sm:text-2xl font-bold">{searchResult.pass_type_id?.name} Pass</h2>
+                <p className="text-blue-100 mt-1">Pass ID: {searchResult.booking_id}</p>
               </div>
               <div className="text-right">
                 <MdConfirmationNumber className="text-3xl mb-2" />
@@ -115,41 +181,36 @@ const GateEntry = () => {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Buyer Name</label>
-                  <p className="text-lg font-semibold text-gray-900">{searchResult.buyerName}</p>
+                  <p className="text-lg font-semibold text-gray-900">{searchResult.buyer_name}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Phone Number</label>
-                  <p className="text-lg font-semibold text-gray-900">{searchResult.buyerPhone}</p>
+                  <p className="text-lg font-semibold text-gray-900">{searchResult.buyer_phone}</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Pass Type</label>
-                  <p className="text-lg font-semibold text-gray-900">{searchResult.passType}</p>
+                  <p className="text-lg font-semibold text-gray-900">{searchResult.pass_type_id?.name}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Max People Allowed</label>
-                  <p className="text-lg font-semibold text-gray-900">{searchResult.totalPeople} persons</p>
+                  <p className="text-lg font-semibold text-gray-900">{searchResult.people_entered || 0}/{searchResult.total_people} entered</p>
                 </div>
               </div>
             </div>
 
             <div className="border-t pt-6">
-              {searchResult.checkedIn ? (
+              {(searchResult.people_entered || 0) >= searchResult.total_people ? (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                   <div className="flex items-center">
                     <FiCheckCircle className="text-green-400 text-4xl mr-4" />
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-green-800">Already Checked In</h3>
+                      <h3 className="text-lg font-semibold text-green-800">Fully Checked In</h3>
                       <p className="text-green-600 mt-1">
-                        This pass was checked in on {new Date(searchResult.checkedInAt).toLocaleString()}
+                        All {searchResult.total_people} people have entered. Pass is fully utilized.
                       </p>
                     </div>
-                  </div>
-                  <div className="mt-4 p-3 bg-green-100 rounded-lg">
-                    <p className="text-sm text-green-700">
-                      <strong>Note:</strong> This pass has already been used for entry. Contact supervisor if re-entry is required.
-                    </p>
                   </div>
                 </div>
               ) : (
@@ -157,17 +218,39 @@ const GateEntry = () => {
                   <div className="text-center">
                     <MdConfirmationNumber className="text-blue-400 text-4xl mb-4" />
                     <h3 className="text-lg font-semibold text-blue-800 mb-2">Ready for Check-In</h3>
-                    <p className="text-blue-600 mb-6">This pass is valid and ready for entry. Click below to check in the guest(s).</p>
+                    <p className="text-blue-600 mb-4">Remaining: {searchResult.total_people - (searchResult.people_entered || 0)} people can enter</p>
+                    
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">People Entering Now</label>
+                      <select
+                        value={peopleCount}
+                        onChange={(e) => setPeopleCount(Number(e.target.value))}
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {Array.from({ length: searchResult.total_people - (searchResult.people_entered || 0) }, (_, i) => (
+                          <option key={i + 1} value={i + 1}>{i + 1} person{i > 0 ? 's' : ''}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
                     <button
                       onClick={handleCheckIn}
                       className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-lg"
                     >
-                      <FiCheckCircle className="inline mr-2" /> Check In Now
+                      <FiCheckCircle className="inline mr-2" /> Check In {peopleCount} Person{peopleCount > 1 ? 's' : ''}
                     </button>
                   </div>
                 </div>
               )}
             </div>
+            
+            {searchResult.payment_status && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <strong>Payment:</strong> {searchResult.payment_status} via {searchResult.payment_mode}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -10,17 +10,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const { user, setUser } = useAppContext();
 
   const menuItems = {
-    admin: [
+    Admin: [
       { id: 'dashboard', label: 'Dashboard', icon: MdDashboard, path: '/dashboard' },
       { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
       { id: 'bookings', label: 'All Bookings', icon: MdList, path: '/bookings' },
       { id: 'gate', label: 'Gate Entry', icon: MdLogin, path: '/gate-entry' },
     ],
-    sales: [
+    'Sales Staff': [
       { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
       { id: 'bookings', label: 'My Sales', icon: MdList, path: '/bookings' },
     ],
-    gate: [
+    'Gate Staff': [
       { id: 'gate', label: 'Gate Entry', icon: MdLogin, path: '/gate-entry' },
       { id: 'bookings', label: 'Entry Log', icon: MdList, path: '/bookings' },
     ]

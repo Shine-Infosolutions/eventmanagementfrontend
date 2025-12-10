@@ -1,26 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const Sidebar = ({ user, currentView, onNavigate, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [authToken, setAuthToken] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setAuthToken(token);
+  }, []);
+
+  const getAuthHeaders = () => ({
+    'Authorization': `Bearer ${authToken}`,
+    'Content-Type': 'application/json'
+  });
 
   const menuItems = {
-    admin: [
+    Admin: [
       { id: 'dashboard', label: 'Dashboard', icon: '📊' },
       { id: 'sell', label: 'Sell Pass', icon: '🎫' },
       { id: 'bookings', label: 'All Bookings', icon: '📋' },
       { id: 'gate', label: 'Gate Entry', icon: '🚪' },
     ],
-    sales: [
+    'Sales Staff': [
       { id: 'sell', label: 'Sell Pass', icon: '🎫' },
       { id: 'bookings', label: 'My Sales', icon: '📋' },
     ],
-    gate: [
+    'Gate Staff': [
       { id: 'gate', label: 'Gate Entry', icon: '🚪' },
       { id: 'bookings', label: 'Entry Log', icon: '📋' },
     ]
   };
 
-  const items = menuItems[user.role] || [];
+  const items = menuItems[user?.role] || [];
+
+  console.log('Sidebar Debug:', { user, authToken, userRole: user?.role, items });
+
+  // Always show sidebar for debugging
+  // if (!user || !authToken) {
+  //   return null;
+  // }
 
   return (
     <>
@@ -47,23 +65,33 @@ const Sidebar = ({ user, currentView, onNavigate, onLogout }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="mt-6">
-          {items.map(item => (
-            <button
-              key={item.id}
-              onClick={() => {
-                onNavigate(item.id);
-                setIsOpen(false);
-              }}
-              className={`w-full flex items-center px-6 py-3 text-left hover:bg-gray-800 transition-colors ${
-                currentView === item.id ? 'bg-blue-600 border-r-4 border-blue-400' : ''
-              }`}
-            >
-              <span className="mr-3 text-lg">{item.icon}</span>
-              {item.label}
+        <nav className="mt-6 flex-1">
+          <div className="space-y-2 px-4">
+            <button className="w-full flex items-center px-4 py-3 text-left text-white hover:bg-gray-800 rounded-md transition-colors">
+              <span className="mr-3 text-lg">📊</span>
+              <span>Dashboard</span>
             </button>
-          ))}
+            <button className="w-full flex items-center px-4 py-3 text-left text-white hover:bg-gray-800 rounded-md transition-colors">
+              <span className="mr-3 text-lg">🎫</span>
+              <span>Sell Pass</span>
+            </button>
+            <button className="w-full flex items-center px-4 py-3 text-left text-white hover:bg-gray-800 rounded-md transition-colors">
+              <span className="mr-3 text-lg">📋</span>
+              <span>All Bookings</span>
+            </button>
+            <button className="w-full flex items-center px-4 py-3 text-left text-white hover:bg-gray-800 rounded-md transition-colors">
+              <span className="mr-3 text-lg">🚪</span>
+              <span>Gate Entry</span>
+            </button>
+          </div>
         </nav>
+
+        {/* User Info with Auth Status */}
+        <div className="px-6 py-2 border-t border-gray-700">
+          <div className="text-xs text-gray-400">
+            Auth: {authToken ? '✅ Authenticated' : '❌ Not Authenticated'}
+          </div>
+        </div>
 
         {/* Logout */}
         <div className="absolute bottom-0 w-full p-6 border-t border-gray-700">
