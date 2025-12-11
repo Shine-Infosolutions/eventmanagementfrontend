@@ -33,12 +33,15 @@ export default function Login() {
       }
       
       const result = await response.json();
-      if (result.token) {
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify({ name: 'Super Admin', role: 'Admin' }));
+      console.log('Login response:', result);
+      
+      const token = result.token || result.accessToken || result.authToken;
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(result.user || { name: 'Super Admin', role: 'Admin' }));
         navigate('/dashboard');
       } else {
-        alert('Login successful but no token received');
+        alert('Login successful but no token received: ' + JSON.stringify(result));
       }
     } catch (error) {
       alert('Login error occurred');
