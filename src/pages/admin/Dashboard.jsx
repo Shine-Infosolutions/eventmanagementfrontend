@@ -113,14 +113,14 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2 text-lg">Welcome back, {user?.name || 'Admin'}</p>
-        <p className="text-sm text-gray-500">New Year 2025 Event Management</p>
+    <div className="p-3 sm:p-6 bg-gray-50 min-h-screen">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600 mt-2 text-base sm:text-lg">Welcome back, {user?.name || 'Admin'}</p>
+        <p className="text-xs sm:text-sm text-gray-500">New Year 2025 Event Management</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <StatCard 
           title="Total Bookings" 
           value={stats.totalBookings} 
@@ -149,8 +149,8 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <h3 className="text-xl font-semibold text-gray-900 mb-6">Pass Type Analytics</h3>
           <div className="space-y-4">
             {stats.passTypes.map((passType, index) => {
@@ -181,7 +181,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <h3 className="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h3>
           <div className="space-y-4">
             <button
@@ -206,7 +206,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 overflow-x-auto">
         <h3 className="text-xl font-semibold text-gray-900 mb-6">Recent Bookings</h3>
         <div className="overflow-x-auto">
           <table className="w-full">

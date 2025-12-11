@@ -36,13 +36,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   return (
     <>
-      <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed inset-y-0 left-0 z-40 w-64 sm:w-72 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0`}>
+      } lg:translate-x-0`}>
         
-        <div className="p-6 border-b border-gray-700">
-          <h2 className="text-xl font-bold">Event Pass System</h2>
-          <p className="text-sm text-gray-300 mt-1">{user?.name}</p>
+        <div className="p-4 sm:p-6 border-b border-gray-700">
+          <h2 className="text-lg sm:text-xl font-bold truncate">Event Pass System</h2>
+          <p className="text-sm text-gray-300 mt-1 truncate">{user?.name}</p>
           <span className="inline-block px-2 py-1 text-xs bg-blue-600 rounded-full mt-2 capitalize">
             {user?.role}
           </span>
@@ -56,22 +56,22 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 navigate(item.path);
                 setIsOpen(false);
               }}
-              className={`w-full flex items-center px-6 py-3 text-left hover:bg-gray-800 transition-colors ${
+              className={`w-full flex items-center px-4 sm:px-6 py-3 text-sm sm:text-base text-left hover:bg-gray-800 transition-colors ${
                 location.pathname === item.path ? 'bg-blue-600 border-r-4 border-blue-400' : ''
               }`}
             >
-              <item.icon className="mr-3 text-lg" />
+              <item.icon className="mr-2 sm:mr-3 text-lg flex-shrink-0" />
               {item.label}
             </button>
           ))}
         </nav>
 
-        <div className="absolute bottom-0 w-full p-6 border-t border-gray-700">
+        <div className="absolute bottom-0 w-full p-4 sm:p-6 border-t border-gray-700">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center px-4 py-2 text-red-400 hover:bg-red-900 hover:text-red-300 rounded-md transition-colors"
+            className="w-full flex items-center px-3 sm:px-4 py-2 text-sm sm:text-base text-red-400 hover:bg-red-900 hover:text-red-300 rounded-md transition-colors"
           >
-            <MdExitToApp className="mr-3" />
+            <MdExitToApp className="mr-2 sm:mr-3 flex-shrink-0" />
             Logout
           </button>
         </div>
@@ -79,7 +79,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
