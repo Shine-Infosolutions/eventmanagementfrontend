@@ -380,18 +380,24 @@ const BookingList = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-1">
                     <button
                       onClick={() => setViewingBooking(booking)}
                       className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
                     >
-                      View Details
+                      View
+                    </button>
+                    <button
+                      onClick={() => setEditingBooking(booking)}
+                      className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs"
+                    >
+                      Edit
                     </button>
                     <button
                       onClick={() => showResendOptions(booking._id)}
                       className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs"
                     >
-                      Send to Customer
+                      Send
                     </button>
                   </div>
                 </div>
