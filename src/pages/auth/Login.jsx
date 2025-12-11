@@ -26,7 +26,8 @@ export default function Login() {
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginData)
+        body: JSON.stringify(loginData),
+        signal: AbortSignal.timeout(15000)
       });
       
       if (response.status === 429) {
@@ -46,7 +47,11 @@ export default function Login() {
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert('Backend server is not responding. Please try again later.');
+      if (error.name === 'TimeoutError') {
+        alert('Login is taking too long. Database connection issue. Please try again.');
+      } else {
+        alert('Backend server is not responding. Please try again later.');
+      }
     }
     setLoading(false);
   };
