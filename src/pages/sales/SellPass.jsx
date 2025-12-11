@@ -12,6 +12,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
     buyer_phone: '',
     passes: [{ people_count: 1, buyer_details: { name: '', phone: '' } }],
     payment_mode: 'Cash',
+    payment_status: 'Paid',
     upi_id: '',
     transaction_id: ''
   });
@@ -29,6 +30,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         buyer_phone: editData.buyer_phone || '',
         passes: editData.passes || [{ people_count: editData.total_people || 1, buyer_details: { name: '', phone: '' } }],
         payment_mode: editData.payment_mode || 'Cash',
+        payment_status: editData.payment_status || 'Paid',
         upi_id: '',
         transaction_id: ''
       });
@@ -114,9 +116,9 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       
       // Add payment status based on mode
       if (editData) {
-        saleData.payment_status = 'Paid';
+        saleData.payment_status = formData.payment_status;
       } else {
-        saleData.mark_as_paid = true; // Backend expects this for new bookings
+        saleData.mark_as_paid = formData.payment_status === 'Paid'; // Backend expects boolean
       }
       const url = editData ? `${API_URL}/api/bookings/${editData._id}` : `${API_URL}/api/bookings`;
       const method = editData ? 'PUT' : 'POST';
@@ -132,8 +134,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
       if (response.ok) {
         const booking = await response.json();
-        const action = editData ? 'updated' : 'sold';
-        alert(`🎉 Pass ${action} successfully!\n\nBooking ID: ${booking.booking_id || booking.booking?.booking_id}\nCustomer: ${formData.buyer_name}\nPasses: ${formData.passes.length}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
+        const action = editData ? 'updated' : 'created';
+        alert(`🎉 Booking ${action} successfully!\n\nBooking ID: ${booking.booking_id || booking.booking?.booking_id}\nCustomer: ${formData.buyer_name}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
         
         if (!editData) {
           resetForm();
@@ -148,8 +150,33 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
           navigate('/sell-pass-list');
         }
       } else {
+        const errorData = await response.json();
+        
+        // Handle duplicate phone number error
+        if (errorData.message?.includes('already has a booking') && errorData.existingBooking) {
+          const existing = errorData.existingBooking;
+          const userChoice = confirm(
+            `⚠️ Phone number already has a booking!\n\n` +
+            `Existing Booking:\n` +
+            `ID: ${existing.booking_id}\n` +
+            `Name: ${existing.buyer_name}\n` +
+            `Status: ${existing.payment_status}\n\n` +
+            `Click OK to continue anyway, or Cancel to change phone number.`
+          );
+          
+          if (!userChoice) {
+            // User chose to change phone number
+            return;
+          }
+          
+          // User chose to continue - we could implement override logic here
+          alert('⚠️ Cannot create duplicate booking. Please use a different phone number or edit the existing booking.');
+          return;
+        }
+        
+        // Handle other errors
         const action = editData ? 'update' : 'create';
-        throw new Error(`Failed to ${action} booking`);
+        throw new Error(errorData.message || `Failed to ${action} booking`);
       }
     } catch (error) {
       alert('❌ Error: ' + error.message);
@@ -172,6 +199,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       buyer_phone: '',
       passes: [{ people_count: firstPassType?.name === 'Couple' ? 2 : 1, buyer_details: { name: '', phone: '' } }],
       payment_mode: 'Cash',
+      payment_status: 'Paid',
       upi_id: '',
       transaction_id: ''
     });
@@ -505,6 +533,28 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                       className="w-4 h-4"
                     />
                     <span className="font-medium">{mode}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Payment Status */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-3">Payment Status</label>
+              <div className="grid grid-cols-2 gap-3">
+                {['Paid', 'Pending'].map((status) => (
+                  <label key={status} className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="payment_status"
+                      value={status}
+                      checked={formData.payment_status === status}
+                      onChange={(e) => setFormData({...formData, payment_status: e.target.value})}
+                      className="w-4 h-4"
+                    />
+                    <span className={`font-medium ${
+                      status === 'Paid' ? 'text-green-600' : 'text-yellow-600'
+                    }`}>{status}</span>
                   </label>
                 ))}
               </div>

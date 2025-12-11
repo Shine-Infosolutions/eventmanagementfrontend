@@ -17,8 +17,9 @@ const App = () => {
     <AppContextProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route
-          path="/*"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <div className="flex h-screen bg-gray-100">
@@ -28,14 +29,61 @@ const App = () => {
                     <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
                   </div>
                   <main className="flex-1 overflow-y-auto lg:ml-64">
-                    <Routes>
-                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/sell-pass" element={<SellPass />} />
-                      <Route path="/sell-pass-list" element={<SellPassList />} />
-                      <Route path="/bookings" element={<BookingList />} />
-                      <Route path="/gate-entry" element={<GateEntry />} />
-                    </Routes>
+                    <Dashboard />
+                  </main>
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sell-pass"
+          element={
+            <ProtectedRoute>
+              <div className="flex h-screen bg-gray-100">
+                <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <div className="lg:hidden">
+                    <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+                  </div>
+                  <main className="flex-1 overflow-y-auto lg:ml-64">
+                    <SellPass />
+                  </main>
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bookings"
+          element={
+            <ProtectedRoute>
+              <div className="flex h-screen bg-gray-100">
+                <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <div className="lg:hidden">
+                    <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+                  </div>
+                  <main className="flex-1 overflow-y-auto lg:ml-64">
+                    <BookingList />
+                  </main>
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gate-entry"
+          element={
+            <ProtectedRoute>
+              <div className="flex h-screen bg-gray-100">
+                <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <div className="lg:hidden">
+                    <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+                  </div>
+                  <main className="flex-1 overflow-y-auto lg:ml-64">
+                    <GateEntry />
                   </main>
                 </div>
               </div>
