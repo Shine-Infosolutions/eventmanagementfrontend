@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://eventbackend-6byp.vercel.app';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -22,6 +22,7 @@ export default function Login() {
         ? { email: formData.identifier, password: formData.password }
         : { mobile: formData.identifier, password: formData.password };
       
+      console.log('Attempting login to:', `${API_URL}/api/auth/login`);
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -44,7 +45,8 @@ export default function Login() {
         alert('Login successful but no token received: ' + JSON.stringify(result));
       }
     } catch (error) {
-      alert('Login error occurred');
+      console.error('Login error:', error);
+      alert('Backend server is not responding. Please try again later.');
     }
     setLoading(false);
   };
