@@ -206,9 +206,39 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 overflow-x-auto">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-6">Recent Bookings</h3>
-        <div className="overflow-x-auto">
+        
+        {/* Mobile Card View */}
+        <div className="block sm:hidden space-y-3">
+          {stats.recentBookings.map((booking) => (
+            <div key={booking._id} className="border border-gray-200 rounded-lg p-3">
+              <div className="flex justify-between items-start mb-2">
+                <div className="font-mono text-sm text-gray-900">{booking.booking_id}</div>
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  booking.checked_in 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {booking.checked_in ? 'Checked In' : 'Pending'}
+                </span>
+              </div>
+              <div className="mb-2">
+                <div className="font-medium text-gray-900">{booking.buyer_name}</div>
+                <div className="text-sm text-gray-500">{booking.buyer_phone}</div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                  {booking.pass_type_id?.name}
+                </span>
+                <span className="font-semibold text-gray-900">₹{booking.pass_type_id?.price}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
