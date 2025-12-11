@@ -1,20 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppContext } from '../../context/AppContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const SellPass = () => {
   const navigate = useNavigate();
-  const { addBooking } = useAppContext();
   const [passTypes, setPassTypes] = useState([]);
   const [formData, setFormData] = useState({
-    passTypeId: '',
-    buyerName: '',
-    buyerPhone: '',
-    paymentMode: 'Cash',
-    upiId: '',
-    transactionId: ''
+    pass_type_id: '',
+    buyer_name: '',
+    buyer_phone: '',
+    payment_mode: 'Cash',
+    upi_id: '',
+    transaction_id: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -31,23 +29,16 @@ const SellPass = () => {
           'Content-Type': 'application/json'
         }
       });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      const data = await response.json();
-      setPassTypes(Array.isArray(data) ? data : []);
-      if (data.length > 0) {
-        setFormData(prev => ({ ...prev, passTypeId: data[0]._id }));
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPassTypes(data);
+        if (data.length > 0) {
+          setFormData(prev => ({ ...prev, pass_type_id: data[0]._id }));
+        }
       }
     } catch (error) {
       console.error('Error loading pass types:', error);
-      // Use fallback data if API fails
-      setPassTypes([
-        { _id: '1', name: 'Teens', price: 500, max_people: 2, valid_for_event: 'New Year 2025' },
-        { _id: '2', name: 'Couple', price: 800, max_people: 2, valid_for_event: 'New Year 2025' },
-        { _id: '3', name: 'Family', price: 1200, max_people: 4, valid_for_event: 'New Year 2025' }
-      ]);
-      setFormData(prev => ({ ...prev, passTypeId: '1' }));
     }
   };
 
@@ -55,182 +46,237 @@ const SellPass = () => {
     e.preventDefault();
     setLoading(true);
 
-    const selectedPass = passTypes.find(p => p._id === formData.passTypeId);
-    const bookingData = {
-      passTypeId: selectedPass._id,
-      passType: selectedPass.name,
-      buyerName: formData.buyerName,
-      buyerPhone: formData.buyerPhone,
-      totalPeople: selectedPass.max_people,
-      price: selectedPass.price,
-      paymentMode: formData.paymentMode
-    };
+    try {
+      const selectedPass = passTypes.find(p => p._id === formData.pass_type_id);
+      const bookingData = {
+        pass_type_id: formData.pass_type_id,
+        buyer_name: formData.buyer_name,
+        buyer_phone: formData.buyer_phone,
+        total_people: selectedPass.max_people,
+        payment_mode: formData.payment_mode,
+        payment_status: 'Paid',
+        notes: buildPaymentNotes()
+      };
 
-    const booking = addBooking(bookingData);
-    alert(`Pass created successfully!\nPass ID: ${booking.id}\nQR Code: ${booking.qrCodeValue}`);
-    setFormData({ passTypeId: passTypes[0]?._id || '', buyerName: '', buyerPhone: '', paymentMode: 'Cash', upiId: '', transactionId: '' });
-    setLoading(false);
-    navigate('/bookings');
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/bookings`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(bookingData)
+      });
+
+      if (response.ok) {
+        const booking = await response.json();
+        alert(`Pass sold successfully!\nBooking ID: ${booking.booking_id}\nAmount: ₹${selectedPass.price}`);
+        resetForm();
+        navigate('/bookings');
+      } else {
+        throw new Error('Failed to create booking');
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Sell New Pass</h1>
-        <p className="text-gray-600 mt-2">Create a new event pass for customers</p>
-      </div>
+  const buildPaymentNotes = () => {
+    if (formData.payment_mode === 'Cash') return 'Cash payment';
+    if (formData.payment_mode === 'UPI') return `UPI payment - ${formData.upi_id} - TXN: ${formData.transaction_id}`;
+    return `${formData.payment_mode} payment - TXN: ${formData.transaction_id}`;
+  };
 
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Select Pass Type</label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {passTypes.map((passType) => (
-                <div
-                  key={passType._id}
-                  className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                    formData.passTypeId === passType._id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => setFormData({...formData, passTypeId: passType._id})}
-                >
-                  <div className="text-center">
-                    <h3 className="font-semibold text-lg">{passType.name} Pass</h3>
-                    <p className="text-xl font-bold text-green-600 mt-2">₹{passType.price}</p>
-                    <p className="text-xs text-gray-500 mt-1">Max: {passType.max_people} people</p>
-                    <p className="text-xs text-gray-400 mt-1">{passType.valid_for_event}</p>
+  const resetForm = () => {
+    setFormData({
+      pass_type_id: passTypes[0]?._id || '',
+      buyer_name: '',
+      buyer_phone: '',
+      payment_mode: 'Cash',
+      upi_id: '',
+      transaction_id: ''
+    });
+  };
+
+  const selectedPass = passTypes.find(p => p._id === formData.pass_type_id);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="w-full">
+        <div className="bg-white border-b border-gray-200 px-8 py-6">
+          <h1 className="text-4xl font-bold text-gray-900">Sell Pass</h1>
+          <p className="text-gray-600 mt-2">Create new event pass for customers</p>
+        </div>
+
+        <div className="p-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            
+            {/* Pass Type Selection */}
+            <div>
+              <label className="block text-lg font-semibold text-gray-900 mb-4">Select Pass Type</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {passTypes.map((passType) => (
+                  <div
+                    key={passType._id}
+                    className={`relative border-2 rounded-xl p-6 cursor-pointer transition-all hover:shadow-md ${
+                      formData.pass_type_id === passType._id
+                        ? 'border-blue-500 bg-blue-50 shadow-md'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setFormData({...formData, pass_type_id: passType._id})}
+                  >
+                    {formData.pass_type_id === passType._id && (
+                      <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                        ✓
+                      </div>
+                    )}
+                    <div className="text-center">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{passType.name}</h3>
+                      <div className="text-3xl font-bold text-green-600 mb-2">₹{passType.price}</div>
+                      <div className="text-sm text-gray-500 mb-1">Max: {passType.max_people} people</div>
+                      <div className="text-xs text-gray-400">{passType.valid_for_event}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Price Summary */}
+            {selectedPass && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{selectedPass.name} Pass</h3>
+                    <p className="text-sm text-gray-600">Maximum {selectedPass.max_people} people allowed</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-green-600">₹{selectedPass.price}</div>
+                    <div className="text-sm text-gray-500">Total Amount</div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            )}
 
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-medium text-gray-700">Total Amount:</span>
-              <span className="text-2xl font-bold text-green-600">
-                ₹{passTypes.find(p => p._id === formData.passTypeId)?.price || 0}
-              </span>
+            {/* Customer Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Customer Name *</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter full name"
+                  value={formData.buyer_name}
+                  onChange={(e) => setFormData({...formData, buyer_name: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Mobile Number *</label>
+                <input
+                  type="tel"
+                  required
+                  pattern="[0-9]{10}"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="10-digit mobile number"
+                  value={formData.buyer_phone}
+                  onChange={(e) => setFormData({...formData, buyer_phone: e.target.value})}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Payment Mode */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Buyer Name *</label>
-              <input
-                type="text"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter full name"
-                value={formData.buyerName}
-                onChange={(e) => setFormData({...formData, buyerName: e.target.value})}
-              />
+              <label className="block text-sm font-semibold text-gray-900 mb-3">Payment Mode</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {['Cash', 'UPI', 'Card', 'Online'].map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    className={`p-3 rounded-lg border-2 font-medium transition-all ${
+                      formData.payment_mode === mode
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setFormData({...formData, payment_mode: mode, upi_id: '', transaction_id: ''})}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Mobile Number *</label>
-              <input
-                type="tel"
-                required
-                pattern="[0-9]{10}"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter 10-digit mobile number"
-                value={formData.buyerPhone}
-                onChange={(e) => setFormData({...formData, buyerPhone: e.target.value})}
-              />
-            </div>
-          </div>
+            {/* Payment Details */}
+            {formData.payment_mode === 'UPI' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">UPI ID *</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      placeholder="example@upi"
+                      value={formData.upi_id}
+                      onChange={(e) => setFormData({...formData, upi_id: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Transaction ID *</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      placeholder="Transaction ID"
+                      value={formData.transaction_id}
+                      onChange={(e) => setFormData({...formData, transaction_id: e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Payment Mode</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.paymentMode}
-              onChange={(e) => setFormData({...formData, paymentMode: e.target.value, upiId: '', transactionId: ''})}
+            {(formData.payment_mode === 'Card' || formData.payment_mode === 'Online') && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Transaction ID *</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter transaction ID"
+                  value={formData.transaction_id}
+                  onChange={(e) => setFormData({...formData, transaction_id: e.target.value})}
+                />
+              </div>
+            )}
+
+            {formData.payment_mode === 'Cash' && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <span className="text-yellow-600 mr-2">💰</span>
+                  <span className="text-yellow-800 font-medium">Cash payment - No additional details required</span>
+                </div>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading || !formData.pass_type_id || !formData.buyer_name || !formData.buyer_phone}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              <option value="Cash">Cash</option>
-              <option value="UPI">UPI</option>
-              <option value="Card">Card</option>
-              <option value="Online">Online</option>
-            </select>
-          </div>
-
-          {formData.paymentMode === 'UPI' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">UPI ID *</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="example@upi"
-                    value={formData.upiId}
-                    onChange={(e) => setFormData({...formData, upiId: e.target.value})}
-                  />
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Processing...
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Transaction ID *</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter transaction ID"
-                    value={formData.transactionId}
-                    onChange={(e) => setFormData({...formData, transactionId: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {formData.paymentMode === 'Card' && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Transaction ID *</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter card transaction ID"
-                  value={formData.transactionId}
-                  onChange={(e) => setFormData({...formData, transactionId: e.target.value})}
-                />
-              </div>
-            </div>
-          )}
-
-          {formData.paymentMode === 'Online' && (
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Transaction ID *</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter online payment transaction ID"
-                  value={formData.transactionId}
-                  onChange={(e) => setFormData({...formData, transactionId: e.target.value})}
-                />
-              </div>
-            </div>
-          )}
-
-          {formData.paymentMode === 'Cash' && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-sm text-yellow-800">💰 Cash payment - No additional details required</p>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 font-medium text-lg"
-          >
-            {loading ? 'Processing...' : 'Mark as Paid & Generate Pass'}
-          </button>
-        </form>
+              ) : (
+                `Complete Sale - ₹${selectedPass?.price || 0}`
+              )}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
