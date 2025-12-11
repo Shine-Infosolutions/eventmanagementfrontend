@@ -9,14 +9,14 @@ const Header = ({ toggleSidebar }) => {
         <div className="flex items-center min-w-0 flex-1">
           <button 
             onClick={toggleSidebar}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors md:hidden"
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors lg:hidden"
             title="Toggle Sidebar"
           >
             <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div className="ml-2 md:ml-0 min-w-0 flex-1">
+          <div className="ml-2 lg:ml-0 min-w-0 flex-1">
             <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Event Pass System</h1>
             <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">New Year 2025</p>
           </div>

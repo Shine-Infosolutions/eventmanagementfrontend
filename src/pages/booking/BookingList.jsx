@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import Button from '../../components/Button';
-import BookingForm from './BookingForm';
+import SellPass from '../sales/SellPass';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -9,7 +9,7 @@ const BookingList = () => {
   const { user } = useAppContext();
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
-  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [showSellPass, setShowSellPass] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editingBooking, setEditingBooking] = useState(null);
   const [filters, setFilters] = useState({
@@ -42,7 +42,7 @@ const BookingList = () => {
   };
 
   const deleteBooking = async (bookingId) => {
-    if (!confirm('Are you sure you want to delete this booking?')) return;
+    if (!window.confirm('Are you sure you want to delete this booking?')) return;
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/bookings/${bookingId}`, {
@@ -167,10 +167,44 @@ const BookingList = () => {
             </h1>
             <p className="text-gray-600 mt-2 text-sm sm:text-base">Manage and track event pass bookings</p>
           </div>
-          <Button onClick={() => setShowBookingForm(true)} variant="primary" className="w-full sm:w-auto">
-            <span className="mr-2">+</span>
-            Create Booking
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => {
+                const excelData = filteredBookings.map(booking => ({
+                  'Booking ID': booking.booking_id,
+                  'Customer Name': booking.buyer_name,
+                  'Phone': booking.buyer_phone,
+                  'Pass Type': booking.pass_type_id?.name,
+                  'Price': booking.pass_type_id?.price,
+                  'Payment Mode': booking.payment_mode,
+                  'Payment Status': booking.payment_status,
+                  'Total People': booking.total_people,
+                  'People Entered': booking.people_entered,
+                  'Checked In': booking.checked_in ? 'Yes' : 'No',
+                  'Date': new Date(booking.createdAt).toLocaleDateString(),
+                  'Time': new Date(booking.createdAt).toLocaleTimeString()
+                }));
+                const csv = [Object.keys(excelData[0] || {}), ...excelData.map(row => Object.values(row))]
+                  .map(row => row.map(field => `"${field}"`).join(','))
+                  .join('\n');
+                const blob = new Blob([csv], { type: 'application/vnd.ms-excel' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `bookings-${new Date().toISOString().split('T')[0]}.xls`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              variant="outline" 
+              className="w-full sm:w-auto"
+            >
+              📊 Download Excel
+            </Button>
+            <Button onClick={() => setShowSellPass(true)} variant="primary" className="w-full sm:w-auto">
+              <span className="mr-2">+</span>
+              Create Booking
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -304,6 +338,7 @@ const BookingList = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Buyer Info</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pass Type</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -330,7 +365,26 @@ const BookingList = () => {
                           {getPaymentModeBadge(booking.payment_mode)}
                           {booking.notes && <div className="text-xs text-gray-500 mt-1">{booking.notes}</div>}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(booking)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            booking.payment_status === 'Paid' 
+                              ? 'bg-green-100 text-green-800' 
+                              : booking.payment_status === 'Pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {booking.payment_status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            booking.checked_in 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {booking.checked_in ? 'Checked In' : 'Pending Entry'}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(booking.createdAt).toLocaleDateString()}
                           <div className="text-xs">{new Date(booking.createdAt).toLocaleTimeString()}</div>
@@ -370,19 +424,42 @@ const BookingList = () => {
         )}
       </div>
       
-      <BookingForm 
-        isOpen={showBookingForm} 
-        onClose={() => setShowBookingForm(false)}
-        onBookingCreated={loadBookings}
-      />
+      {showSellPass && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-bold">Create New Booking</h2>
+              <button 
+                onClick={() => setShowSellPass(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <SellPass onClose={() => setShowSellPass(false)} onBookingCreated={loadBookings} />
+          </div>
+        </div>
+      )}
       
       {editingBooking && (
-        <BookingForm 
-          isOpen={true}
-          onClose={() => setEditingBooking(null)}
-          onBookingCreated={() => { loadBookings(); setEditingBooking(null); }}
-          editData={editingBooking}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-bold">Edit Booking</h2>
+              <button 
+                onClick={() => setEditingBooking(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <SellPass 
+              onClose={() => setEditingBooking(null)} 
+              onBookingCreated={() => { loadBookings(); setEditingBooking(null); }}
+              editData={editingBooking}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

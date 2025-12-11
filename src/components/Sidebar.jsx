@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { MdDashboard, MdConfirmationNumber, MdList, MdLogin, MdExitToApp } from 'react-icons/md';
-import { FiUsers } from 'react-icons/fi';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate();
@@ -12,13 +10,15 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const menuItems = {
     Admin: [
       { id: 'dashboard', label: 'Dashboard', icon: MdDashboard, path: '/dashboard' },
-      { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
+      // { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
+      // { id: 'sell-list', label: 'Pass Sales', icon: MdList, path: '/sell-pass-list' },
       { id: 'bookings', label: 'All Bookings', icon: MdList, path: '/bookings' },
       { id: 'gate', label: 'Gate Entry', icon: MdLogin, path: '/gate-entry' },
     ],
     'Sales Staff': [
-      { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
-      { id: 'bookings', label: 'My Sales', icon: MdList, path: '/bookings' },
+      // { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
+      // { id: 'sell-list', label: 'My Sales', icon: MdList, path: '/sell-pass-list' },
+      { id: 'bookings', label: 'All Bookings', icon: MdList, path: '/bookings' },
     ],
     'Gate Staff': [
       { id: 'gate', label: 'Gate Entry', icon: MdLogin, path: '/gate-entry' },
@@ -36,19 +36,19 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   return (
     <>
-      <div className={`fixed inset-y-0 left-0 z-40 w-64 sm:w-72 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}>
         
-        <div className="p-4 sm:p-6 border-b border-gray-700">
-          <h2 className="text-lg sm:text-xl font-bold truncate">Event Pass System</h2>
+        <div className="p-4 border-b border-gray-700">
+          <h2 className="text-lg font-bold truncate">Event Pass System</h2>
           <p className="text-sm text-gray-300 mt-1 truncate">{user?.name}</p>
           <span className="inline-block px-2 py-1 text-xs bg-blue-600 rounded-full mt-2 capitalize">
             {user?.role}
           </span>
         </div>
 
-        <nav className="mt-6">
+        <nav className="mt-4 flex-1 overflow-y-auto">
           {items.map(item => (
             <button
               key={item.id}
@@ -56,23 +56,23 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 navigate(item.path);
                 setIsOpen(false);
               }}
-              className={`w-full flex items-center px-4 sm:px-6 py-3 text-sm sm:text-base text-left hover:bg-gray-800 transition-colors ${
+              className={`w-full flex items-center px-4 py-3 text-sm text-left hover:bg-gray-800 transition-colors ${
                 location.pathname === item.path ? 'bg-blue-600 border-r-4 border-blue-400' : ''
               }`}
             >
-              <item.icon className="mr-2 sm:mr-3 text-lg flex-shrink-0" />
-              {item.label}
+              <item.icon className="mr-3 text-lg flex-shrink-0" />
+              <span className="truncate">{item.label}</span>
             </button>
           ))}
         </nav>
 
-        <div className="absolute bottom-0 w-full p-4 sm:p-6 border-t border-gray-700">
+        <div className="p-4 border-t border-gray-700 mt-auto">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center px-3 sm:px-4 py-2 text-sm sm:text-base text-red-400 hover:bg-red-900 hover:text-red-300 rounded-md transition-colors"
+            className="w-full flex items-center px-3 py-2 text-sm text-red-400 hover:bg-red-900 hover:text-red-300 rounded-md transition-colors"
           >
-            <MdExitToApp className="mr-2 sm:mr-3 flex-shrink-0" />
-            Logout
+            <MdExitToApp className="mr-3 flex-shrink-0" />
+            <span className="truncate">Logout</span>
           </button>
         </div>
       </div>

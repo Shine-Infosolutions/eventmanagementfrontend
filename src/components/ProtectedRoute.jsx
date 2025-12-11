@@ -1,20 +1,27 @@
 import { Navigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const ProtectedRoute = ({ children }) => {
   const { user, setUser } = useAppContext();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
-      }
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    
+    if (token && savedUser && !user) {
+      setUser(JSON.parse(savedUser));
     }
+    setLoading(false);
   }, [user, setUser]);
 
-  if (!user) {
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  const token = localStorage.getItem('token');
+  if (!user || !token) {
     return <Navigate to="/login" replace />;
   }
 

@@ -24,57 +24,58 @@ const Dashboard = () => {
   const loadDashboardStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const [statsRes, bookingsRes, entryLogsRes] = await Promise.all([
-        fetch(`${API_URL}/api/pass-types/dashboard/stats`, {
+      const [passTypesRes, bookingsRes] = await Promise.all([
+        fetch(`${API_URL}/api/pass-types`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch(`${API_URL}/api/bookings`, {
           headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${API_URL}/api/entry/logs`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }).catch(() => ({ ok: false }))
+        })
       ]);
 
-      if (statsRes.ok && bookingsRes.ok) {
-        const dashboardStats = await statsRes.json();
+      if (passTypesRes.ok && bookingsRes.ok) {
+        const passTypes = await passTypesRes.json();
         const bookings = await bookingsRes.json();
-        const entryLogs = entryLogsRes.ok ? await entryLogsRes.json() : [];
         
-        // Calculate revenue from paid bookings only
+        // Calculate revenue from all bookings
         const paidBookings = bookings.filter(b => b.payment_status === 'Paid');
-        const totalRevenue = paidBookings.reduce((sum, b) => {
-          const price = typeof b.pass_type_id === 'object' ? b.pass_type_id.price : dashboardStats.passTypes?.find(pt => pt._id === b.pass_type_id)?.price || 0;
+        const totalRevenue = bookings.reduce((sum, b) => {
+          const price = typeof b.pass_type_id === 'object' ? b.pass_type_id.price : passTypes.find(pt => pt._id === b.pass_type_id)?.price || 0;
           return sum + price;
         }, 0);
         
         // Calculate check-in stats
-        const checkedIn = bookings.filter(b => b.checked_in || b.people_entered > 0).length;
+        const checkedInBookings = bookings.filter(b => b.status === 'Checked-in' || b.checked_in);
         const totalPeopleEntered = bookings.reduce((sum, b) => sum + (b.people_entered || 0), 0);
+        const pendingEntry = bookings.filter(b => 
+          (!b.status || b.status === 'Pending') && 
+          !b.checked_in && 
+          (b.people_entered === 0 || !b.people_entered)
+        ).length;
         
         // Pass type breakdown with revenue
-        const passTypeStats = dashboardStats.passTypes?.map(pt => {
-          const typeBookings = paidBookings.filter(b => 
+        const passTypeStats = passTypes.map(pt => {
+          const typeBookings = bookings.filter(b => 
             (typeof b.pass_type_id === 'object' ? b.pass_type_id._id : b.pass_type_id) === pt._id
           );
+          const typePaidBookings = typeBookings.filter(b => b.payment_status === 'Paid');
           return {
             ...pt,
-            count: typeBookings.length,
-            revenue: typeBookings.length * pt.price,
+            count: typePaidBookings.length,
+            revenue: typePaidBookings.length * pt.price,
             peopleEntered: typeBookings.reduce((sum, b) => sum + (b.people_entered || 0), 0)
           };
-        }) || [];
+        });
 
         setStats({
           totalBookings: bookings.length,
           paidBookings: paidBookings.length,
           totalRevenue,
           passTypes: passTypeStats,
-          checkedIn,
-          pending: bookings.length - checkedIn,
+          checkedIn: checkedInBookings.length,
+          pending: pendingEntry,
           totalPeopleEntered,
-          recentBookings: bookings.slice(-5).reverse(),
-          entryLogs: entryLogs.slice(-10) || []
+          recentBookings: bookings.slice(-5).reverse()
         });
       }
     } catch (error) {
@@ -153,31 +154,45 @@ const Dashboard = () => {
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <h3 className="text-xl font-semibold text-gray-900 mb-6">Pass Type Analytics</h3>
           <div className="space-y-4">
-            {stats.passTypes.map((passType, index) => {
-              const colors = ['bg-purple-500', 'bg-pink-500', 'bg-blue-500'];
-              const bgColors = ['bg-purple-50', 'bg-pink-50', 'bg-blue-50'];
-              const percentage = stats.totalBookings > 0 ? (passType.count / stats.totalBookings * 100).toFixed(1) : 0;
-              
-              return (
-                <div key={passType._id} className={`p-4 ${bgColors[index]} rounded-lg`}>
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center">
-                      <div className={`w-3 h-3 ${colors[index]} rounded-full mr-3`}></div>
-                      <span className="font-semibold text-gray-900">{passType.name} Pass</span>
-                      <span className="ml-2 text-sm text-gray-500">₹{passType.price}</span>
+            {stats.passTypes && stats.passTypes.length > 0 ? (
+              stats.passTypes.map((passType, index) => {
+                const colors = ['bg-purple-500', 'bg-pink-500', 'bg-blue-500'];
+                const bgColors = ['bg-purple-50', 'bg-pink-50', 'bg-blue-50'];
+                const percentage = stats.totalBookings > 0 ? (passType.count / stats.totalBookings * 100).toFixed(1) : 0;
+                
+                return (
+                  <div key={passType._id} className={`p-4 ${bgColors[index]} rounded-lg`}>
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center">
+                        <div className={`w-3 h-3 ${colors[index]} rounded-full mr-3`}></div>
+                        <span className="font-semibold text-gray-900">{passType.name} Pass</span>
+                        <span className="ml-2 text-sm text-gray-500">₹{passType.price}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-lg">{passType.count || 0}</span>
+                        <span className="text-sm text-gray-500 ml-1">({percentage}%)</span>
+                        <div className="text-xs text-gray-400">₹{(passType.revenue || 0).toLocaleString()}</div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className="font-bold text-lg">{passType.count}</span>
-                      <span className="text-sm text-gray-500 ml-1">({percentage}%)</span>
-                      <div className="text-xs text-gray-400">₹{passType.revenue?.toLocaleString()}</div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className={`${colors[index]} h-2 rounded-full`} style={{width: `${percentage}%`}}></div>
                     </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className={`${colors[index]} h-2 rounded-full`} style={{width: `${percentage}%`}}></div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-gray-400 text-4xl mb-4">📊</div>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">No Pass Types Found</h4>
+                <p className="text-gray-600 mb-4">Create pass types to see analytics</p>
+                <button 
+                  onClick={() => navigate('/sell-pass')}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Create Pass Type
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
