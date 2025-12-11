@@ -12,10 +12,12 @@ const BookingList = () => {
   const [showSellPass, setShowSellPass] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editingBooking, setEditingBooking] = useState(null);
+  const [viewingBooking, setViewingBooking] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
     passType: 'all',
-    status: 'all'
+    paymentStatus: 'all',
+    checkinStatus: 'all'
   });
 
   useEffect(() => {
@@ -38,6 +40,65 @@ const BookingList = () => {
       }
     } catch (error) {
       console.error('Error updating payment status:', error);
+    }
+  };
+
+  const resendPass = async (bookingId, method = 'sms', customerName = '', customerPhone = '') => {
+    console.log(`Sending pass: ID=${bookingId}, Method=${method}, Customer=${customerName}, Phone=${customerPhone}`);
+    
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Making API call to:', `${API_URL}/api/bookings/${bookingId}/resend`);
+      
+      const response = await fetch(`${API_URL}/api/bookings/${bookingId}/resend`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ method })
+      });
+      
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
+      
+      if (response.ok) {
+        const methodName = method ? method.toUpperCase() : 'SMS';
+        const sentTo = data.sentTo || customerPhone || 'customer';
+        const message = data.message || 'Pass sent successfully';
+        
+        alert(`✅ ${message}\n\nCustomer: ${customerName}\nMethod: ${methodName}\nSent to: ${sentTo}\n\nCustomer will receive pass details on their ${method === 'email' ? 'email' : 'phone'}.`);
+      } else {
+        alert(`❌ Failed to send pass details\n\nError: ${data.message || 'Service unavailable'}`);
+      }
+    } catch (error) {
+      console.error('Full error details:', error);
+      alert('❌ Error: Unable to send pass details.\n\nPlease check internet connection and try again.');
+    }
+  };
+
+  const showResendOptions = (bookingId) => {
+    console.log('Show resend options for booking ID:', bookingId);
+    const booking = filteredBookings.find(b => b._id === bookingId);
+    console.log('Found booking:', booking);
+    
+    const customerPhone = booking?.buyer_phone || 'customer';
+    const customerName = booking?.buyer_name || 'Customer';
+    
+    console.log(`Customer: ${customerName}, Phone: ${customerPhone}`);
+    
+    const method = prompt(
+      `Send pass details to ${customerName} (${customerPhone}):\n\n1. SMS - type: sms\n2. WhatsApp - type: whatsapp\n3. Email - type: email\n\nChoose method:`,
+      'sms'
+    );
+    
+    console.log('Selected method:', method);
+    
+    if (method && ['sms', 'whatsapp', 'email'].includes(method.toLowerCase())) {
+      resendPass(bookingId, method.toLowerCase(), customerName, customerPhone);
+    } else if (method) {
+      alert('Invalid method. Please use: sms, whatsapp, or email');
     }
   };
 
@@ -100,9 +161,13 @@ const BookingList = () => {
       filtered = filtered.filter(booking => booking.pass_type_id?.name === filters.passType);
     }
 
-    if (filters.status !== 'all') {
+    if (filters.paymentStatus !== 'all') {
+      filtered = filtered.filter(booking => booking.payment_status === filters.paymentStatus);
+    }
+
+    if (filters.checkinStatus !== 'all') {
       filtered = filtered.filter(booking => 
-        filters.status === 'checked-in' ? booking.checked_in : !booking.checked_in
+        filters.checkinStatus === 'checked-in' ? booking.checked_in : !booking.checked_in
       );
     }
 
@@ -209,7 +274,7 @@ const BookingList = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-4 sm:mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
             <input
@@ -236,15 +301,29 @@ const BookingList = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
             <select
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={filters.status}
-              onChange={(e) => setFilters({...filters, status: e.target.value})}
+              value={filters.paymentStatus}
+              onChange={(e) => setFilters({...filters, paymentStatus: e.target.value})}
             >
-              <option value="all">All Status</option>
+              <option value="all">All Payment</option>
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending</option>
+              <option value="Refunded">Refunded</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Check-in Status</label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={filters.checkinStatus}
+              onChange={(e) => setFilters({...filters, checkinStatus: e.target.value})}
+            >
+              <option value="all">All Check-in</option>
               <option value="checked-in">Checked In</option>
-              <option value="pending">Pending</option>
+              <option value="pending">Not Checked In</option>
             </select>
           </div>
         </div>
@@ -301,28 +380,18 @@ const BookingList = () => {
                     </div>
                   </div>
                   
-                  <div className="flex space-x-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => updatePaymentStatus(booking._id, booking.payment_status === 'Paid' ? 'Pending' : 'Paid')}
-                      className={`flex-1 px-2 py-1 rounded text-xs ${
-                        booking.payment_status === 'Paid' 
-                          ? 'bg-yellow-100 text-yellow-800' 
-                          : 'bg-green-100 text-green-800'
-                      }`}
+                      onClick={() => setViewingBooking(booking)}
+                      className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
                     >
-                      {booking.payment_status === 'Paid' ? 'Pending' : 'Paid'}
+                      View Details
                     </button>
                     <button
-                      onClick={() => setEditingBooking(booking)}
-                      className="flex-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
+                      onClick={() => showResendOptions(booking._id)}
+                      className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs"
                     >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteBooking(booking._id)}
-                      className="flex-1 px-2 py-1 bg-red-100 text-red-800 rounded text-xs"
-                    >
-                      Delete
+                      Send to Customer
                     </button>
                   </div>
                 </div>
@@ -390,28 +459,24 @@ const BookingList = () => {
                           <div className="text-xs">{new Date(booking.createdAt).toLocaleTimeString()}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
+                          <div className="flex space-x-1">
                             <button
-                              onClick={() => updatePaymentStatus(booking._id, booking.payment_status === 'Paid' ? 'Pending' : 'Paid')}
-                              className={`px-2 py-1 rounded text-xs ${
-                                booking.payment_status === 'Paid' 
-                                  ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
-                                  : 'bg-green-100 text-green-800 hover:bg-green-200'
-                              }`}
+                              onClick={() => setViewingBooking(booking)}
+                              className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs hover:bg-blue-200"
                             >
-                              {booking.payment_status === 'Paid' ? 'Mark Pending' : 'Mark Paid'}
+                              View
                             </button>
                             <button
                               onClick={() => setEditingBooking(booking)}
-                              className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs hover:bg-blue-200"
+                              className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs hover:bg-gray-200"
                             >
                               Edit
                             </button>
                             <button
-                              onClick={() => deleteBooking(booking._id)}
-                              className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs hover:bg-red-200"
+                              onClick={() => showResendOptions(booking._id)}
+                              className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs hover:bg-green-200"
                             >
-                              Delete
+                              Send Pass
                             </button>
                           </div>
                         </td>
@@ -441,6 +506,96 @@ const BookingList = () => {
         </div>
       )}
       
+      {/* View Booking Modal */}
+      {viewingBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-bold">Booking Details</h2>
+              <button 
+                onClick={() => setViewingBooking(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Pass ID</label>
+                  <p className="text-lg font-mono">{viewingBooking.booking_id}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Customer Name</label>
+                  <p className="text-lg">{viewingBooking.buyer_name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Phone Number</label>
+                  <p className="text-lg">{viewingBooking.buyer_phone}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Pass Type</label>
+                  <p className="text-lg">{viewingBooking.pass_type_id?.name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Amount</label>
+                  <p className="text-lg font-semibold text-green-600">₹{viewingBooking.pass_type_id?.price}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Payment Status</label>
+                  <span className={`px-2 py-1 rounded-full text-sm ${
+                    viewingBooking.payment_status === 'Paid' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {viewingBooking.payment_status}
+                  </span>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Payment Mode</label>
+                  <p className="text-lg">{viewingBooking.payment_mode}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">People</label>
+                  <p className="text-lg">{viewingBooking.people_entered || 0}/{viewingBooking.total_people}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Check-in Status</label>
+                  <span className={`px-2 py-1 rounded-full text-sm ${
+                    viewingBooking.checked_in 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {viewingBooking.checked_in ? 'Checked In' : 'Pending Entry'}
+                  </span>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Created Date</label>
+                  <p className="text-lg">{new Date(viewingBooking.createdAt).toLocaleDateString()}</p>
+                </div>
+              </div>
+              
+              {viewingBooking.notes && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-500">Notes</label>
+                  <p className="text-sm bg-gray-50 p-3 rounded">{viewingBooking.notes}</p>
+                </div>
+              )}
+              
+              <div className="mt-6 text-center">
+                <button
+                  onClick={() => setViewingBooking(null)}
+                  className="bg-gray-600 text-white px-6 py-2 rounded hover:bg-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Edit Booking Modal */}
       {editingBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">

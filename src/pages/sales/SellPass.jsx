@@ -99,28 +99,30 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       const totalPeople = formData.passes.reduce((sum, pass) => sum + pass.people_count, 0);
       const totalPrice = selectedPass.price * formData.passes.length;
       
-      const bookingData = {
-        pass_type_id: formData.pass_type_id,
-        buyer_name: formData.buyer_name,
-        buyer_phone: formData.buyer_phone,
-        total_people: totalPeople,
-        payment_mode: formData.payment_mode,
-        payment_status: 'Paid',
-        notes: `${formData.passes.length} passes with ${totalPeople} total people. ${buildPaymentNotes()}`
-      };
-
       const token = localStorage.getItem('token');
+      
+      // For new bookings, use mark_as_paid parameter that backend expects
+      // For edits, use payment_status parameter
       const saleData = {
         pass_type_id: formData.pass_type_id,
         buyer_name: formData.buyer_name,
         buyer_phone: formData.buyer_phone,
         total_people: totalPeople,
         payment_mode: formData.payment_mode,
-        payment_status: 'Paid',
         notes: `${formData.passes.length} passes with ${totalPeople} total people. ${buildPaymentNotes()}`
       };
-      const response = await fetch(`${API_URL}/api/bookings`, {
-        method: 'POST',
+      
+      // Add payment status based on mode
+      if (editData) {
+        saleData.payment_status = 'Paid';
+      } else {
+        saleData.mark_as_paid = true; // Backend expects this for new bookings
+      }
+      const url = editData ? `${API_URL}/api/bookings/${editData._id}` : `${API_URL}/api/bookings`;
+      const method = editData ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -130,19 +132,24 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
       if (response.ok) {
         const booking = await response.json();
-        alert(`🎉 Pass sold successfully!\n\nBooking ID: ${booking.booking_id}\nCustomer: ${formData.buyer_name}\nPasses: ${formData.passes.length}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
-        resetForm();
+        const action = editData ? 'updated' : 'sold';
+        alert(`🎉 Pass ${action} successfully!\n\nBooking ID: ${booking.booking_id || booking.booking?.booking_id}\nCustomer: ${formData.buyer_name}\nPasses: ${formData.passes.length}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
+        
+        if (!editData) {
+          resetForm();
+        }
+        
         if (onBookingCreated) {
           onBookingCreated();
         }
         if (onClose) {
           onClose();
-        } else {
+        } else if (!editData) {
           navigate('/sell-pass-list');
         }
       } else {
-        throw new Error('Failed to create booking');
-
+        const action = editData ? 'update' : 'create';
+        throw new Error(`Failed to ${action} booking`);
       }
     } catch (error) {
       alert('❌ Error: ' + error.message);

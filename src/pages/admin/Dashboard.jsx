@@ -21,6 +21,32 @@ const Dashboard = () => {
     loadDashboardStats();
   }, []);
 
+  const downloadReport = () => {
+    const csvData = [
+      ['Booking ID', 'Customer Name', 'Phone', 'Pass Type', 'Amount', 'Payment Status', 'Check-in Status', 'People Entered', 'Created Date'],
+      ...stats.recentBookings.map(booking => [
+        booking.booking_id,
+        booking.buyer_name,
+        booking.buyer_phone,
+        booking.pass_type_id?.name || 'N/A',
+        booking.pass_type_id?.price || 0,
+        booking.payment_status,
+        booking.checked_in ? 'Checked In' : 'Pending',
+        booking.people_entered || 0,
+        new Date(booking.createdAt).toLocaleDateString()
+      ])
+    ];
+    
+    const csvContent = csvData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `event-report-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const loadDashboardStats = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -216,6 +242,12 @@ const Dashboard = () => {
               className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all flex items-center justify-center font-medium"
             >
               <span className="mr-2">🚪</span>Gate Entry
+            </button>
+            <button
+              onClick={downloadReport}
+              className="w-full bg-gradient-to-r from-orange-600 to-orange-700 text-white p-4 rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all flex items-center justify-center font-medium"
+            >
+              <span className="mr-2">📊</span>Download Report
             </button>
           </div>
         </div>
