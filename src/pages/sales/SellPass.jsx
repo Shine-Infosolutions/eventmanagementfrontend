@@ -292,32 +292,32 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="w-full max-w-6xl mx-auto">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 sm:p-8 rounded-b-2xl shadow-xl">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 sm:p-6 lg:p-8 rounded-b-2xl shadow-xl mx-2 sm:mx-0">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <span className="text-2xl">🎫</span>
+            <div className="p-2 sm:p-3 bg-white/20 rounded-xl">
+              <span className="text-xl sm:text-2xl">🎫</span>
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Event Pass Sales</h1>
-              <p className="text-blue-100 text-sm sm:text-base">New Year 2025 Celebration</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Event Pass Sales</h1>
+              <p className="text-blue-100 text-xs sm:text-sm lg:text-base">New Year 2025 Celebration</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white m-4 sm:m-6 rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8">
+        <div className="bg-white m-2 sm:m-4 lg:m-6 rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-8">
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             
             {/* Pass Type Selection */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
-              <label className="block text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 rounded-xl border border-blue-200">
+              <label className="block text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
                 <span className="text-blue-600">🎫</span>
                 Select Pass Type
               </label>
               <select
-                className="w-full p-4 border-2 border-blue-200 rounded-xl text-lg bg-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
+                className="w-full p-3 sm:p-4 border-2 border-blue-200 rounded-xl text-base sm:text-lg bg-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
                 value={formData.pass_type_id}
                 onChange={(e) => {
                   const selectedPassType = passTypes.find(p => p._id === e.target.value);
@@ -461,8 +461,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
             {/* Pass Configuration */}
             {selectedPass && (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:p-6 rounded-xl border border-green-200">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2">
                   <span className="text-green-600">⚙️</span>
                   Pass Configuration
                 </h3>
@@ -470,8 +470,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                 <div className="space-y-4">
                   {formData.passes.map((pass, index) => (
                     <div key={index} className="space-y-4">
-                      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1">
                               <span className="text-green-500">💰</span>
@@ -608,66 +608,78 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
             )}
 
             {/* Customer Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Primary Customer Name *</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full p-3 border-2 border-gray-300 rounded-lg"
-                  placeholder="Enter full name"
-                  value={formData.buyer_name}
-                  onChange={(e) => setFormData({...formData, buyer_name: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Primary Mobile Number *</label>
-                <input
-                  type="tel"
-                  required
-                  className="w-full p-3 border-2 border-gray-300 rounded-lg"
-                  placeholder="Enter mobile number"
-                  value={formData.buyer_phone}
-                  onChange={(e) => setFormData({...formData, buyer_phone: e.target.value})}
-                />
+            <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-4 sm:p-6 rounded-xl border border-gray-200">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2">
+                <span className="text-gray-600">👤</span>
+                Customer Details
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Primary Customer Name *</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-lg text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    placeholder="Enter full name"
+                    value={formData.buyer_name}
+                    onChange={(e) => setFormData({...formData, buyer_name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Primary Mobile Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    className="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-lg text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    placeholder="Enter mobile number"
+                    value={formData.buyer_phone}
+                    onChange={(e) => setFormData({...formData, buyer_phone: e.target.value})}
+                  />
+                </div>
               </div>
             </div>
 
             {/* Payment Method */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-3">Payment Method</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 sm:p-6 rounded-xl border border-purple-200">
+              <label className="block text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span className="text-purple-600">💳</span>
+                Payment Method
+              </label>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {['Cash', 'UPI', 'Card', 'Online'].map((mode) => (
-                  <label key={mode} className="flex items-center space-x-2 cursor-pointer">
+                  <label key={mode} className="flex items-center space-x-2 cursor-pointer p-3 border-2 border-gray-200 rounded-lg hover:border-purple-300 transition-colors">
                     <input
                       type="radio"
                       name="payment_mode"
                       value={mode}
                       checked={formData.payment_mode === mode}
                       onChange={(e) => setFormData({...formData, payment_mode: e.target.value, upi_id: '', transaction_id: ''})}
-                      className="w-4 h-4"
+                      className="w-4 h-4 text-purple-600"
                     />
-                    <span className="font-medium">{mode}</span>
+                    <span className="font-medium text-gray-700">{mode}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Payment Status */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-3">Payment Status</label>
-              <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:p-6 rounded-xl border border-green-200">
+              <label className="block text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span className="text-green-600">✅</span>
+                Payment Status
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {['Paid', 'Pending'].map((status) => (
-                  <label key={status} className="flex items-center space-x-2 cursor-pointer">
+                  <label key={status} className="flex items-center space-x-3 cursor-pointer p-3 border-2 border-gray-200 rounded-lg hover:border-green-300 transition-colors">
                     <input
                       type="radio"
                       name="payment_status"
                       value={status}
                       checked={formData.payment_status === status}
                       onChange={(e) => setFormData({...formData, payment_status: e.target.value})}
-                      className="w-4 h-4"
+                      className="w-4 h-4 text-green-600"
                     />
-                    <span className={`font-medium ${
+                    <span className={`font-medium text-lg ${
                       status === 'Paid' ? 'text-green-600' : 'text-yellow-600'
                     }`}>{status}</span>
                   </label>
@@ -726,13 +738,25 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
             )}
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading || !formData.pass_type_id || !formData.buyer_name || !formData.buyer_phone}
-              className="w-full bg-blue-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg font-bold text-base sm:text-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Processing...' : `Complete Sale - ₹${totalPrice.toLocaleString()}`}
-            </button>
+            <div className="pt-4 sm:pt-6">
+              <button
+                type="submit"
+                disabled={loading || !formData.pass_type_id || !formData.buyer_name || !formData.buyer_phone}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 sm:py-5 px-6 sm:px-8 rounded-xl font-bold text-lg sm:text-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-3"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <span>💰</span>
+                    Complete Sale - ₹{totalPrice.toLocaleString()}
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </div>

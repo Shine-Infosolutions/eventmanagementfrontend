@@ -197,40 +197,40 @@ const GateEntry = () => {
       </div>
 
       {/* Mode Toggle */}
-      <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+      <div className="bg-white rounded-lg shadow-lg p-3 sm:p-4 lg:p-6 mb-4">
         <div className="flex justify-center mb-4">
-          <div className="bg-gray-100 p-1 rounded-lg flex">
+          <div className="bg-gray-100 p-1 rounded-lg flex w-full sm:w-auto">
             <button
               onClick={() => { setMode('manual'); stopQRScanner(); }}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-3 rounded-md font-medium transition-colors text-sm sm:text-base ${
                 mode === 'manual' 
                   ? 'bg-blue-600 text-white' 
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              <FiSearch className="inline mr-2" />Manual Search
+              <FiSearch className="inline mr-1 sm:mr-2" />Manual Search
             </button>
             <button
               onClick={() => { setMode('qr'); startQRScanner(); }}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-3 rounded-md font-medium transition-colors text-sm sm:text-base ${
                 mode === 'qr' 
                   ? 'bg-blue-600 text-white' 
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              <FiCamera className="inline mr-2" />QR Scanner
+              <FiCamera className="inline mr-1 sm:mr-2" />QR Scanner
             </button>
           </div>
         </div>
 
         {mode === 'manual' ? (
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-2">Search Pass</label>
               <input
                 type="text"
                 placeholder="Enter Pass ID, Phone Number, or Name"
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base sm:text-lg"
+                className="w-full px-3 sm:px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base sm:text-lg"
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -245,7 +245,7 @@ const GateEntry = () => {
               <button
                 onClick={() => handleSearch()}
                 disabled={loading || !searchTerm.trim()}
-                className="w-full sm:w-auto bg-blue-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 font-medium text-sm sm:text-base"
+                className="w-full lg:w-auto bg-blue-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 font-medium text-base sm:text-lg"
               >
                 {loading ? 'Searching...' : 'Search'}
               </button>
@@ -253,37 +253,37 @@ const GateEntry = () => {
           </div>
         ) : (
           <div className="text-center">
-            <div className="bg-gray-900 rounded-lg p-4 mb-4 relative">
+            <div className="bg-gray-900 rounded-lg p-3 sm:p-4 mb-4 relative">
               {scanning ? (
                 <div>
                   <video
                     ref={videoRef}
-                    className="w-full max-w-md mx-auto rounded"
-                    style={{ maxHeight: '300px' }}
+                    className="w-full max-w-sm sm:max-w-md mx-auto rounded"
+                    style={{ maxHeight: '250px' }}
                   />
                   <div className="absolute inset-0 border-2 border-red-500 rounded-lg pointer-events-none">
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-red-500 rounded-lg"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 sm:w-48 sm:h-48 border-2 border-red-500 rounded-lg"></div>
                   </div>
                 </div>
               ) : (
-                <div className="py-12">
-                  <FiCamera className="text-gray-400 text-6xl mx-auto mb-4" />
-                  <p className="text-gray-400">Camera not active</p>
+                <div className="py-8 sm:py-12">
+                  <FiCamera className="text-gray-400 text-4xl sm:text-6xl mx-auto mb-4" />
+                  <p className="text-gray-400 text-sm sm:text-base">Camera not active</p>
                 </div>
               )}
             </div>
-            <div className="flex gap-2 justify-center">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
               {scanning ? (
                 <>
                   <button
                     onClick={simulateQRScan}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                    className="bg-green-600 text-white px-4 py-2 sm:py-3 rounded-lg hover:bg-green-700 text-sm sm:text-base"
                   >
                     Simulate Scan
                   </button>
                   <button
                     onClick={stopQRScanner}
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                    className="bg-red-600 text-white px-4 py-2 sm:py-3 rounded-lg hover:bg-red-700 text-sm sm:text-base"
                   >
                     Stop Scanner
                   </button>
@@ -291,7 +291,7 @@ const GateEntry = () => {
               ) : (
                 <button
                   onClick={startQRScanner}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+                  className="bg-blue-600 text-white px-6 py-3 sm:py-4 rounded-lg hover:bg-blue-700 text-base sm:text-lg"
                 >
                   <FiCamera className="inline mr-2" />Start QR Scanner
                 </button>
@@ -313,12 +313,12 @@ const GateEntry = () => {
 
       {searchResult === 'not_found' && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6">
-          <div className="flex items-center">
-            <FiX className="text-red-400 text-3xl sm:text-4xl mr-3 sm:mr-4 flex-shrink-0" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <FiX className="text-red-400 text-3xl sm:text-4xl flex-shrink-0" />
             <div>
               <h3 className="text-lg font-semibold text-red-800">Pass Not Found</h3>
-              <p className="text-red-600 mt-1">No booking found with the provided information. Please check and try again.</p>
-              <p className="text-red-500 text-sm mt-2">💡 Check browser console (F12) for debug info</p>
+              <p className="text-red-600 mt-1 text-sm sm:text-base">No booking found with the provided information. Please check and try again.</p>
+              <p className="text-red-500 text-xs sm:text-sm mt-2">💡 Check browser console (F12) for debug info</p>
             </div>
           </div>
         </div>
@@ -326,33 +326,33 @@ const GateEntry = () => {
 
       {searchResult && searchResult !== 'not_found' && (
         <div className="bg-white rounded-lg shadow-lg border">
-          <div className="bg-blue-600 text-white p-3">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="font-bold">
+          <div className="bg-blue-600 text-white p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-bold text-sm sm:text-base">
                   {searchResult.passes && searchResult.passes.length > 0 
                     ? `${searchResult.passes.length} Pass${searchResult.passes.length > 1 ? 'es' : ''} (${searchResult.passes.map(p => p.pass_type_name || 'Pass').join(', ')})` 
                     : (searchResult.pass_type_id?.name || 'Pass')}
                 </h3>
-                <p className="text-xs opacity-90">#{searchResult.booking_id}</p>
+                <p className="text-xs opacity-90 truncate">#{searchResult.booking_id}</p>
               </div>
-              <span className="text-xs bg-white/20 px-2 py-1 rounded">NY 2025</span>
+              <span className="text-xs bg-white/20 px-2 py-1 rounded flex-shrink-0">NY 2025</span>
             </div>
           </div>
 
-          <div className="p-3">
-            <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
-              <div className="text-center">
-                <p className="text-gray-500">Guest</p>
-                <p className="font-semibold">{searchResult.buyer_name}</p>
+          <div className="p-3 sm:p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-2 mb-4 sm:mb-3">
+              <div className="text-center sm:text-left">
+                <p className="text-gray-500 text-xs sm:text-sm">Guest</p>
+                <p className="font-semibold text-sm sm:text-base truncate">{searchResult.buyer_name}</p>
               </div>
-              <div className="text-center">
-                <p className="text-gray-500">Phone</p>
-                <p className="font-semibold">{searchResult.buyer_phone}</p>
+              <div className="text-center sm:text-left">
+                <p className="text-gray-500 text-xs sm:text-sm">Phone</p>
+                <p className="font-semibold text-sm sm:text-base">{searchResult.buyer_phone}</p>
               </div>
-              <div className="text-center">
-                <p className="text-gray-500">Entry Status</p>
-                <p className="font-semibold">{searchResult.total_people_entered || searchResult.people_entered || 0} of {searchResult.total_people}</p>
+              <div className="text-center sm:text-left">
+                <p className="text-gray-500 text-xs sm:text-sm">Entry Status</p>
+                <p className="font-semibold text-sm sm:text-base">{searchResult.total_people_entered || searchResult.people_entered || 0} of {searchResult.total_people}</p>
               </div>
             </div>
 
@@ -429,24 +429,25 @@ const GateEntry = () => {
                   </div>
                 </div>
               ) : (
-                <div className="bg-green-50 border border-green-200 rounded p-3">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 sm:p-6">
                   <div className="text-center">
-                    <p className="text-sm font-bold text-green-800 mb-2">Ready for Entry</p>
-                    <p className="text-xs text-green-700 mb-2">
+                    <p className="text-base sm:text-lg font-bold text-green-800 mb-3">Ready for Entry</p>
+                    <p className="text-sm sm:text-base text-green-700 mb-3">
                       {searchResult.total_people - (searchResult.total_people_entered || searchResult.people_entered || 0)} can enter
                     </p>
                     
                     {(searchResult.total_people_entered || searchResult.people_entered || 0) > 0 && (
-                      <div className="mb-2 p-1 bg-amber-100 rounded text-xs text-amber-800">
-                        {searchResult.total_people_entered || searchResult.people_entered} entered
+                      <div className="mb-3 p-2 bg-amber-100 rounded text-sm text-amber-800">
+                        {searchResult.total_people_entered || searchResult.people_entered} already entered
                       </div>
                     )}
                     
-                    <div className="mb-2">
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Select number of people</label>
                       <select
                         value={peopleCount}
                         onChange={(e) => setPeopleCount(Number(e.target.value))}
-                        className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                        className="w-full sm:w-auto px-3 py-2 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                       >
                         {Array.from({ length: searchResult.total_people - (searchResult.total_people_entered || searchResult.people_entered || 0) }, (_, i) => (
                           <option key={i + 1} value={i + 1}>{i + 1} person{i > 0 ? 's' : ''}</option>
@@ -456,10 +457,10 @@ const GateEntry = () => {
                     
                     <button
                       onClick={() => handleCheckIn(false)}
-                      className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 font-semibold"
+                      className="w-full sm:w-auto bg-green-600 text-white px-6 py-3 rounded-lg text-base sm:text-lg hover:bg-green-700 font-semibold shadow-lg"
                     >
-                      <FiCheckCircle className="inline mr-1" /> 
-                      Check In {peopleCount}
+                      <FiCheckCircle className="inline mr-2" /> 
+                      Check In {peopleCount} {peopleCount === 1 ? 'Person' : 'People'}
                     </button>
                   </div>
                 </div>
@@ -478,25 +479,53 @@ const GateEntry = () => {
       )}
 
       {!searchResult && (
-        <div className="bg-gray-50 rounded-lg p-6 mt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">How to use Gate Entry:</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+        <div className="bg-gray-50 rounded-lg p-4 sm:p-6 mt-6">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">How to use Gate Entry:</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 text-sm sm:text-base text-gray-600">
             <div>
-              <h4 className="font-medium text-gray-900 mb-2 flex items-center"><FiSearch className="mr-2" /> Search Methods:</h4>
-              <ul className="space-y-1">
-                <li>• Scan QR code from guest's phone/print</li>
-                <li>• Enter Pass ID (NY2025-XXXXXX)</li>
-                <li>• Search by phone number</li>
-                <li>• Search by guest name</li>
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center text-base sm:text-lg">
+                <FiSearch className="mr-2 flex-shrink-0" /> Search Methods:
+              </h4>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <span className="mr-2 flex-shrink-0">•</span>
+                  <span>Scan QR code from guest's phone/print</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 flex-shrink-0">•</span>
+                  <span>Enter Pass ID (NY2025-XXXXXX)</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 flex-shrink-0">•</span>
+                  <span>Search by phone number</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 flex-shrink-0">•</span>
+                  <span>Search by guest name</span>
+                </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 mb-2 flex items-center"><FiCheckCircle className="mr-2" /> Check-in Process:</h4>
-              <ul className="space-y-1">
-                <li>• Verify guest identity</li>
-                <li>• Check pass validity</li>
-                <li>• Click "Check In Now"</li>
-                <li>• Allow entry to event</li>
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center text-base sm:text-lg">
+                <FiCheckCircle className="mr-2 flex-shrink-0" /> Check-in Process:
+              </h4>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <span className="mr-2 flex-shrink-0">•</span>
+                  <span>Verify guest identity</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 flex-shrink-0">•</span>
+                  <span>Check pass validity</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 flex-shrink-0">•</span>
+                  <span>Click "Check In Now"</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 flex-shrink-0">•</span>
+                  <span>Allow entry to event</span>
+                </li>
               </ul>
             </div>
           </div>

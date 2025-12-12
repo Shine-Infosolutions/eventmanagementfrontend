@@ -50,15 +50,15 @@ const CreatePassType = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Create New Pass Type</h1>
+    <div className="min-h-screen bg-gray-100 p-3 sm:p-6">
+      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Create New Pass Type</h1>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Pass Name</label>
             <select
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               required
@@ -73,7 +73,7 @@ const CreatePassType = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Price (₹)</label>
             <input
               type="number"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
               placeholder="Enter price"
               value={formData.price}
               onChange={(e) => setFormData({...formData, price: e.target.value})}
@@ -85,7 +85,7 @@ const CreatePassType = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Max People</label>
             <input
               type="number"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
               placeholder="Max people allowed"
               value={formData.max_people}
               onChange={(e) => setFormData({...formData, max_people: e.target.value})}
@@ -97,25 +97,25 @@ const CreatePassType = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
             <input
               type="text"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
               placeholder="Optional description"
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
             />
           </div>
 
-          <div className="flex gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+              className="w-full sm:flex-1 bg-blue-600 text-white py-3 sm:py-4 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium text-base"
             >
               {loading ? 'Creating...' : 'Add Pass Type'}
             </button>
             <button
               type="button"
               onClick={() => navigate('/manage-pass-types')}
-              className="flex-1 bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 font-medium"
+              className="w-full sm:flex-1 bg-gray-600 text-white py-3 sm:py-4 px-6 rounded-lg hover:bg-gray-700 font-medium text-base"
             >
               Cancel
             </button>

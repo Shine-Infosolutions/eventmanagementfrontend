@@ -11,6 +11,7 @@ const BookingList = () => {
   const { user } = useAppContext();
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
+  const [passTypes, setPassTypes] = useState([]);
   const [showSellPass, setShowSellPass] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editingBooking, setEditingBooking] = useState(null);
@@ -104,24 +105,41 @@ const BookingList = () => {
   const loadBookings = async () => {
     try {
       const token = localStorage.getItem('token');
-      console.log('Loading bookings from:', `${API_URL}/api/bookings`);
       
-      const response = await fetch(`${API_URL}/api/bookings`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Load both bookings and pass types
+      const [bookingsResponse, passTypesResponse] = await Promise.all([
+        fetch(`${API_URL}/api/bookings`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch(`${API_URL}/api/pass-types`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+      ]);
       
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Response data:', data);
-      
-      if (response.ok) {
-        setBookings(data || []);
-        setFilteredBookings(data || []);
+      if (bookingsResponse.ok && passTypesResponse.ok) {
+        const bookingsData = await bookingsResponse.json();
+        const passTypesData = await passTypesResponse.json();
+        
+        setPassTypes(passTypesData);
+        
+        // Enrich bookings with pass type details
+        const enrichedBookings = bookingsData.map(booking => {
+          const passType = passTypesData.find(pt => pt._id === booking.pass_type_id);
+          return {
+            ...booking,
+            pass_type_id: passType || { name: 'Unknown', price: 0 }
+          };
+        });
+        
+        setBookings(enrichedBookings);
+        setFilteredBookings(enrichedBookings);
       } else {
-        console.error('API Error:', data);
         setBookings([]);
         setFilteredBookings([]);
       }
@@ -266,14 +284,14 @@ const BookingList = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-4 sm:mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
+      <div className="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+          <div className="sm:col-span-2 xl:col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
             <input
               type="text"
               placeholder="Search by name, phone, or pass ID..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               value={filters.search}
               onChange={(e) => setFilters({...filters, search: e.target.value})}
             />
@@ -282,7 +300,7 @@ const BookingList = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Pass Type</label>
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               value={filters.passType}
               onChange={(e) => setFilters({...filters, passType: e.target.value})}
             >
@@ -296,7 +314,7 @@ const BookingList = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               value={filters.paymentStatus}
               onChange={(e) => setFilters({...filters, paymentStatus: e.target.value})}
             >
@@ -310,7 +328,7 @@ const BookingList = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Check-in Status</label>
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               value={filters.checkinStatus}
               onChange={(e) => setFilters({...filters, checkinStatus: e.target.value})}
             >
@@ -319,10 +337,10 @@ const BookingList = () => {
               <option value="pending">Not Checked In</option>
             </select>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end xl:justify-start">
             <button
               onClick={() => setFilters({ search: '', passType: 'all', paymentStatus: 'all', checkinStatus: 'all' })}
-              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm"
+              className="w-full sm:w-auto px-4 py-2 sm:py-3 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm sm:text-base font-medium"
             >
               Clear Filters
             </button>
@@ -351,7 +369,7 @@ const BookingList = () => {
         ) : (
           <>
             {/* Mobile Card View */}
-            <div className="block md:hidden space-y-4 p-4">
+            <div className="block lg:hidden space-y-3 sm:space-y-4 p-3 sm:p-4">
               {filteredBookings.map((booking) => (
                 <div key={booking._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3">
@@ -419,7 +437,7 @@ const BookingList = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden lg:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -449,17 +467,21 @@ const BookingList = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {booking.passes && booking.passes.length > 0 ? (
                             <div>
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {booking.passes.length} Pass{booking.passes.length > 1 ? 'es' : ''}
-                              </span>
+                              <div className="space-y-1">
+                                {booking.passes.map((pass, idx) => (
+                                  <div key={idx}>
+                                    {getPassTypeBadge(pass.pass_type_name || pass.pass_type_id?.name || 'Pass')}
+                                  </div>
+                                ))}
+                              </div>
                               <div className="text-xs text-gray-500 mt-1">
-                                ₹{booking.passes.reduce((sum, p) => sum + p.pass_type_price, 0)}
+                                ₹{booking.passes.reduce((sum, p) => sum + (p.pass_type_price || p.pass_type_id?.price || 0), 0)}
                               </div>
                             </div>
                           ) : (
                             <div>
-                              {getPassTypeBadge(booking.pass_type_id?.name)}
-                              <div className="text-xs text-gray-500 mt-1">₹{booking.pass_type_id?.price}</div>
+                              {getPassTypeBadge(booking.pass_type_id?.name || 'Unknown')}
+                              <div className="text-xs text-gray-500 mt-1">₹{booking.pass_type_id?.price || 0}</div>
                             </div>
                           )}
                         </td>
