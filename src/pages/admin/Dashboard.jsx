@@ -244,6 +244,12 @@ const Dashboard = () => {
               <span className="mr-2">🚪</span>Gate Entry
             </button>
             <button
+              onClick={() => navigate('/manage-pass-types')}
+              className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 text-white p-4 rounded-lg hover:from-indigo-700 hover:to-indigo-800 transition-all flex items-center justify-center font-medium"
+            >
+              <span className="mr-2">🎫</span>Manage Pass Types
+            </button>
+            <button
               onClick={downloadReport}
               className="w-full bg-gradient-to-r from-orange-600 to-orange-700 text-white p-4 rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all flex items-center justify-center font-medium"
             >

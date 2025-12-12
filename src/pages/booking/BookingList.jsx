@@ -43,62 +43,26 @@ const BookingList = () => {
     }
   };
 
-  const resendPass = async (bookingId, method = 'sms', customerName = '', customerPhone = '') => {
-    console.log(`Sending pass: ID=${bookingId}, Method=${method}, Customer=${customerName}, Phone=${customerPhone}`);
-    
-    try {
-      const token = localStorage.getItem('token');
-      console.log('Making API call to:', `${API_URL}/api/bookings/${bookingId}/resend`);
-      
-      const response = await fetch(`${API_URL}/api/bookings/${bookingId}/resend`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ method })
-      });
-      
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Response data:', data);
-      
-      if (response.ok) {
-        const methodName = method ? method.toUpperCase() : 'SMS';
-        const sentTo = data.sentTo || customerPhone || 'customer';
-        const message = data.message || 'Pass sent successfully';
-        
-        alert(`✅ ${message}\n\nCustomer: ${customerName}\nMethod: ${methodName}\nSent to: ${sentTo}\n\nCustomer will receive pass details on their ${method === 'email' ? 'email' : 'phone'}.`);
-      } else {
-        alert(`❌ Failed to send pass details\n\nError: ${data.message || 'Service unavailable'}`);
-      }
-    } catch (error) {
-      console.error('Full error details:', error);
-      alert('❌ Error: Unable to send pass details.\n\nPlease check internet connection and try again.');
-    }
-  };
 
-  const showResendOptions = (bookingId) => {
-    console.log('Show resend options for booking ID:', bookingId);
+
+  const sendPassWhatsApp = (bookingId) => {
     const booking = filteredBookings.find(b => b._id === bookingId);
-    console.log('Found booking:', booking);
-    
-    const customerPhone = booking?.buyer_phone || 'customer';
+    const customerPhone = booking?.buyer_phone || '';
     const customerName = booking?.buyer_name || 'Customer';
     
-    console.log(`Customer: ${customerName}, Phone: ${customerPhone}`);
+    const passLink = `https://eventfrontend-pi.vercel.app/pass/${bookingId}`;
     
-    const method = prompt(
-      `Send pass details to ${customerName} (${customerPhone}):\n\n1. SMS - type: sms\n2. WhatsApp - type: whatsapp\n3. Email - type: email\n\nChoose method:`,
-      'sms'
+    const message = `New Year 2025 Event\n\nHi ${customerName}!\n\nYour Event Pass is Ready!\n\nPass ID: ${booking.booking_id}\nType: ${booking.pass_type_id?.name}\nPeople: ${booking.total_people}\nAmount: Rs${booking.pass_type_id?.price}\n\nView & Print Your Pass:\n${passLink}\n\nClick the link to view your pass with QR code!\nShow the QR code at the gate for entry.\n\nSee you at the event!`;
+    
+    const whatsappUrl = `https://wa.me/${customerPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+    
+    const confirmed = confirm(
+      `Send pass via WhatsApp to:\n\n${customerName}\n${customerPhone}\n\nThis will open WhatsApp with the pass link.\n\nContinue?`
     );
     
-    console.log('Selected method:', method);
-    
-    if (method && ['sms', 'whatsapp', 'email'].includes(method.toLowerCase())) {
-      resendPass(bookingId, method.toLowerCase(), customerName, customerPhone);
-    } else if (method) {
-      alert('Invalid method. Please use: sms, whatsapp, or email');
+    if (confirmed) {
+      window.open(whatsappUrl, '_blank');
+      alert(`WhatsApp opened with pass link for ${customerName}\n\nPass Link: ${passLink}`);
     }
   };
 
@@ -274,7 +238,7 @@ const BookingList = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-4 sm:mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
             <input
@@ -350,15 +314,15 @@ const BookingList = () => {
         ) : (
           <>
             {/* Mobile Card View */}
-            <div className="block sm:hidden space-y-4">
+            <div className="block lg:hidden space-y-4 p-4">
               {filteredBookings.map((booking) => (
                 <div key={booking._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3">
+                    <div className="mb-2 sm:mb-0">
                       <div className="font-medium text-gray-900 text-sm">{booking.booking_id}</div>
                       <div className="text-xs text-gray-500">People: {booking.people_entered}/{booking.total_people}</div>
                     </div>
-                    {getStatusBadge(booking)}
+                    <div className="self-start">{getStatusBadge(booking)}</div>
                   </div>
                   
                   <div className="space-y-2 mb-3">
@@ -367,10 +331,10 @@ const BookingList = () => {
                       <div className="text-sm text-gray-500">{booking.buyer_phone}</div>
                     </div>
                     
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                       <div>
                         {getPassTypeBadge(booking.pass_type_id?.name)}
-                        <div className="text-xs text-gray-500 mt-1">₹{booking.pass_type_id?.price}</div>
+                        <div className="text-xs text-gray-500 mt-1">Rs {booking.pass_type_id?.price}</div>
                       </div>
                       {getPaymentModeBadge(booking.payment_mode)}
                     </div>
@@ -380,24 +344,24 @@ const BookingList = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <button
                       onClick={() => setViewingBooking(booking)}
-                      className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
+                      className="px-3 py-2 bg-blue-100 text-blue-800 rounded text-sm hover:bg-blue-200"
                     >
                       View
                     </button>
                     <button
                       onClick={() => setEditingBooking(booking)}
-                      className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs"
+                      className="px-3 py-2 bg-gray-100 text-gray-800 rounded text-sm hover:bg-gray-200"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => showResendOptions(booking._id)}
-                      className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs"
+                      onClick={() => sendPassWhatsApp(booking._id)}
+                      className="px-3 py-2 bg-green-100 text-green-800 rounded text-sm hover:bg-green-200"
                     >
-                      Send
+                      Send Pass
                     </button>
                   </div>
                 </div>
@@ -405,7 +369,7 @@ const BookingList = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden sm:block overflow-x-auto">
+            <div className="hidden lg:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -479,7 +443,7 @@ const BookingList = () => {
                               Edit
                             </button>
                             <button
-                              onClick={() => showResendOptions(booking._id)}
+                              onClick={() => sendPassWhatsApp(booking._id)}
                               className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs hover:bg-green-200"
                             >
                               Send Pass
@@ -497,14 +461,14 @@ const BookingList = () => {
       
       {showSellPass && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-4">
             <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-xl font-bold">Create New Booking</h2>
+              <h2 className="text-lg sm:text-xl font-bold">Create New Booking</h2>
               <button 
                 onClick={() => setShowSellPass(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 text-xl"
               >
-                ✕
+                X
               </button>
             </div>
             <SellPass onClose={() => setShowSellPass(false)} onBookingCreated={loadBookings} />
@@ -515,18 +479,18 @@ const BookingList = () => {
       {/* View Booking Modal */}
       {viewingBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-4">
             <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-xl font-bold">Booking Details</h2>
+              <h2 className="text-lg sm:text-xl font-bold">Booking Details</h2>
               <button 
                 onClick={() => setViewingBooking(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 text-xl"
               >
-                ✕
+                X
               </button>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-500">Pass ID</label>
                   <p className="text-lg font-mono">{viewingBooking.booking_id}</p>
@@ -604,14 +568,14 @@ const BookingList = () => {
       {/* Edit Booking Modal */}
       {editingBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-4">
             <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-xl font-bold">Edit Booking</h2>
+              <h2 className="text-lg sm:text-xl font-bold">Edit Booking</h2>
               <button 
                 onClick={() => setEditingBooking(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 text-xl"
               >
-                ✕
+                X
               </button>
             </div>
             <SellPass 

@@ -13,6 +13,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
     passes: [{ people_count: 1, buyer_details: { name: '', phone: '' } }],
     payment_mode: 'Cash',
     payment_status: 'Paid',
+    custom_price: '',
     upi_id: '',
     transaction_id: ''
   });
@@ -31,6 +32,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         passes: editData.passes || [{ people_count: editData.total_people || 1, buyer_details: { name: '', phone: '' } }],
         payment_mode: editData.payment_mode || 'Cash',
         payment_status: editData.payment_status || 'Paid',
+        custom_price: editData.custom_price || '',
         upi_id: '',
         transaction_id: ''
       });
@@ -111,7 +113,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         buyer_phone: formData.buyer_phone,
         total_people: totalPeople,
         payment_mode: formData.payment_mode,
-        notes: `${formData.passes.length} passes with ${totalPeople} total people. ${buildPaymentNotes()}`
+        custom_price: formData.custom_price ? parseInt(formData.custom_price) : undefined,
+        notes: `${formData.passes.length} passes with ${totalPeople} total people. Price: ₹${currentPrice}. ${buildPaymentNotes()}`
       };
       
       // Add payment status based on mode
@@ -200,6 +203,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       passes: [{ people_count: firstPassType?.name === 'Couple' ? 2 : 1, buyer_details: { name: '', phone: '' } }],
       payment_mode: 'Cash',
       payment_status: 'Paid',
+      custom_price: '',
       upi_id: '',
       transaction_id: ''
     });
@@ -208,7 +212,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
   const selectedPass = passTypes.find(p => p._id === formData.pass_type_id);
   const totalPeople = formData.passes.reduce((sum, pass) => sum + pass.people_count, 0);
-  const totalPrice = selectedPass ? selectedPass.price * formData.passes.length : 0;
+  const currentPrice = formData.custom_price ? parseInt(formData.custom_price) : (selectedPass?.price || 0);
+  const totalPrice = currentPrice * formData.passes.length;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -351,7 +356,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
               )}
               
               {/* Add More Pass Types Button */}
-              {passTypes.length > 0 && (
+              {/* {passTypes.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setShowCreatePassType(true)}
@@ -359,7 +364,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                 >
                   + Add Another Pass Type
                 </button>
-              )}
+              )} */}
             </div>
 
             {/* Pass Configuration */}
@@ -371,10 +376,14 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                   {formData.passes.map((pass, index) => (
                     <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Pass #{index + 1}</label>
-                        <div className="w-full p-3 border-2 border-gray-300 rounded-lg bg-gray-50">
-                          ₹{selectedPass.price.toLocaleString()}
-                        </div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Pass #{index + 1} - Price</label>
+                        <input
+                          type="number"
+                          className="w-full p-3 border-2 border-gray-300 rounded-lg"
+                          placeholder="Enter price"
+                          value={formData.custom_price || selectedPass.price}
+                          onChange={(e) => setFormData({...formData, custom_price: e.target.value})}
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-bold text-gray-700 mb-2">People Count</label>
@@ -479,7 +488,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                       <div className="text-sm text-gray-600">Total People</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-green-600">₹{selectedPass.price}</div>
+                      <div className="text-2xl font-bold text-green-600">₹{currentPrice}</div>
                       <div className="text-sm text-gray-600">Per Pass</div>
                     </div>
                     <div>
