@@ -71,7 +71,7 @@ const BookingList = () => {
       }
     }
     
-    const passLink = `https://eventfrontend-pi.vercel.app/pass/${bookingId}`;
+    const passLink = `https://eventmanagementfrontend-psi.vercel.app/pass/${bookingId}`;
     
     const message = `New Year 2025 Event\n\nHi ${customerName}!\n\nYour Event Pass is Ready!\n\nPass ID: ${booking.booking_id}\nType: ${booking.pass_type_id?.name}\nPeople: ${booking.total_people}\nAmount: Rs${booking.pass_type_id?.price}\n\nView & Print Your Pass:\n${passLink}\n\nClick the link to view your pass with QR code!\nShow the QR code at the gate for entry.\n\nSee you at the event!`;
     
