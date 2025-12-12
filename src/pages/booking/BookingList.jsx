@@ -50,25 +50,18 @@ const BookingList = () => {
     const customerPhone = booking?.buyer_phone || '';
     const customerName = booking?.buyer_name || 'Customer';
     
-    // Clean phone number and format properly
+    // Clean and validate phone number
     let cleanPhone = customerPhone.replace(/[^0-9]/g, '');
     
-    // Handle different phone number formats
-    if (cleanPhone.length === 10) {
-      // Indian 10-digit number, add country code
+    // Ensure we have a valid 10-digit Indian number
+    if (cleanPhone.length >= 10) {
+      // Take last 10 digits
+      cleanPhone = cleanPhone.slice(-10);
+      // Add country code
       cleanPhone = '91' + cleanPhone;
-    } else if (cleanPhone.length === 11 && cleanPhone.startsWith('0')) {
-      // Remove leading 0 and add country code
-      cleanPhone = '91' + cleanPhone.substring(1);
-    } else if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) {
-      // Already has country code
-      cleanPhone = cleanPhone;
-    } else if (cleanPhone.length > 12) {
-      // Remove extra digits from the beginning
-      cleanPhone = cleanPhone.slice(-12);
-      if (!cleanPhone.startsWith('91')) {
-        cleanPhone = '91' + cleanPhone.slice(-10);
-      }
+    } else {
+      alert('Invalid phone number format');
+      return;
     }
     
     const passLink = `https://eventmanagementfrontend-psi.vercel.app/pass/${bookingId}`;

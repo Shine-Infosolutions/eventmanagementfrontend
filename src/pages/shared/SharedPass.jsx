@@ -18,13 +18,21 @@ const SharedPass = () => {
 
     const fetchPassData = async () => {
       try {
+        console.log('Fetching pass data for ID:', id);
+        console.log('API URL:', `${API_URL}/api/bookings/${id}`);
+        
         const response = await fetch(`${API_URL}/api/bookings/${id}`);
         
+        console.log('Response status:', response.status);
+        
         if (!response.ok) {
+          const errorText = await response.text();
+          console.log('Error response:', errorText);
           throw new Error('Pass not found');
         }
         
         const booking = await response.json();
+        console.log('Booking data:', booking);
         
         setPassData({
           passId: booking.booking_id,
