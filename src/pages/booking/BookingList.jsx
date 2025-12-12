@@ -563,6 +563,22 @@ const BookingList = () => {
                 </div>
               </div>
               
+              {viewingBooking.pass_holders && viewingBooking.pass_holders.length > 0 && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-500">Pass Holder Details</label>
+                  <div className="bg-gray-50 p-3 rounded space-y-2">
+                    {viewingBooking.pass_holders.map((holder, index) => (
+                      holder.name && (
+                        <div key={index} className="text-sm">
+                          <strong>Person {index + 1}:</strong> {holder.name}
+                          {holder.phone && ` | ${holder.phone}`}
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               {viewingBooking.notes && (
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-500">Notes</label>

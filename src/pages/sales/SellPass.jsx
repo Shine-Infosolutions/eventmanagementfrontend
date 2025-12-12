@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://eventbackend-pi.vercel.app';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const SellPass = ({ onClose, onBookingCreated, editData }) => {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
     pass_type_id: '',
     buyer_name: '',
     buyer_phone: '',
-    passes: [{ people_count: 1, buyer_details: { name: '', phone: '' } }],
+    passes: [{ people_count: 1, buyer_details: {} }],
     payment_mode: 'Cash',
     payment_status: 'Paid',
     custom_price: '',
@@ -29,7 +29,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         pass_type_id: editData.pass_type_id?._id || editData.pass_type_id,
         buyer_name: editData.buyer_name || '',
         buyer_phone: editData.buyer_phone || '',
-        passes: editData.passes || [{ people_count: editData.total_people || 1, buyer_details: { name: '', phone: '' } }],
+        passes: editData.passes || [{ people_count: editData.total_people || 2, buyer_details: {} }],
         payment_mode: editData.payment_mode || 'Cash',
         payment_status: editData.payment_status || 'Paid',
         custom_price: editData.custom_price || '',
@@ -54,9 +54,11 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         const activeTypes = data.filter(pt => pt.is_active);
         setPassTypes(activeTypes);
         if (activeTypes.length > 0) {
+          const firstType = activeTypes[0];
           setFormData(prev => ({ 
             ...prev, 
-            pass_type_id: activeTypes[0]._id
+            pass_type_id: firstType._id,
+            passes: [{ people_count: firstType.name === 'Couple' ? 2 : firstType.name === 'Family' ? 5 : 1, buyer_details: {} }]
           }));
         }
       }
@@ -66,14 +68,14 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
   };
 
   const addPass = () => {
-    const defaultPeopleCount = selectedPass?.name === 'Couple' ? 2 : 1;
-    const defaultMaxPeople = selectedPass?.name === 'Family' ? 5 : selectedPass?.max_people || 1;
+    const defaultPeopleCount = selectedPass?.name === 'Couple' ? 2 : selectedPass?.name === 'Family' ? 5 : 1;
+    const defaultMaxPeople = selectedPass?.name === 'Family' ? 5 : selectedPass?.max_people || 2;
     setFormData({
       ...formData,
       passes: [...formData.passes, { 
         people_count: defaultPeopleCount, 
         max_people: defaultMaxPeople,
-        buyer_details: { name: '', phone: '' } 
+        buyer_details: {} 
       }]
     });
   };
@@ -92,6 +94,10 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
     } else if (field === 'max_people') {
       newPasses[index].max_people = value;
     } else {
+      // Handle person-specific fields
+      if (!newPasses[index].buyer_details) {
+        newPasses[index].buyer_details = {};
+      }
       newPasses[index].buyer_details[field] = value;
     }
     setFormData({ ...formData, passes: newPasses });
@@ -108,44 +114,73 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       
       const token = localStorage.getItem('token');
       
-      // For new bookings, use mark_as_paid parameter that backend expects
-      // For edits, use payment_status parameter
-      const saleData = {
-        pass_type_id: formData.pass_type_id,
-        buyer_name: formData.buyer_name,
-        buyer_phone: formData.buyer_phone,
-        total_people: totalPeople,
-        payment_mode: formData.payment_mode,
-        custom_price: formData.custom_price ? parseInt(formData.custom_price) : undefined,
-        notes: `${formData.passes.length} passes with ${totalPeople} total people. Price: ₹${currentPrice}. ${buildPaymentNotes()}`
-      };
-      
-      // Add payment status based on mode
-      if (editData) {
-        saleData.payment_status = formData.payment_status;
-      } else {
-        saleData.mark_as_paid = formData.payment_status === 'Paid'; // Backend expects boolean
-      }
-      const url = editData ? `${API_URL}/api/bookings/${editData._id}` : `${API_URL}/api/bookings`;
-      const method = editData ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(saleData)
+      // Format pass holders data
+      const passHolders = [];
+      formData.passes.forEach((pass, passIndex) => {
+        for (let i = 0; i < pass.people_count; i++) {
+          const personData = {
+            name: pass.buyer_details[`person_${i}_name`] || '',
+            phone: pass.buyer_details[`person_${i}_phone`] || ''
+          };
+          if (personData.name) {
+            passHolders.push(personData);
+          }
+        }
       });
 
-      if (response.ok) {
-        const booking = await response.json();
-        const action = editData ? 'updated' : 'created';
-        alert(`🎉 Booking ${action} successfully!\n\nBooking ID: ${booking.booking_id || booking.booking?.booking_id}\nCustomer: ${formData.buyer_name}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
+      // Create separate booking for each pass
+      const bookings = [];
+      
+      for (let i = 0; i < formData.passes.length; i++) {
+        const pass = formData.passes[i];
+        const passHoldersForThisPass = [];
         
-        if (!editData) {
-          resetForm();
+        for (let j = 0; j < pass.people_count; j++) {
+          const personData = {
+            name: pass.buyer_details[`person_${j}_name`] || '',
+            phone: pass.buyer_details[`person_${j}_phone`] || ''
+          };
+          if (personData.name) {
+            passHoldersForThisPass.push(personData);
+          }
         }
+        
+        const saleData = {
+          pass_type_id: formData.pass_type_id,
+          buyer_name: formData.buyer_name,
+          buyer_phone: formData.buyer_phone,
+          total_people: pass.people_count,
+          pass_holders: passHoldersForThisPass,
+          payment_mode: formData.payment_mode,
+          mark_as_paid: formData.payment_status === 'Paid',
+          notes: `Pass ${i + 1} of ${formData.passes.length}. ${buildPaymentNotes()}`
+        };
+        
+        const response = await fetch(`${API_URL}/api/bookings`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(saleData)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Failed to create pass ${i + 1}`);
+        }
+        
+        const booking = await response.json();
+        bookings.push(booking);
+      }
+      
+      const response = { ok: true };
+
+      if (response.ok) {
+        const bookingIds = bookings.map(b => b.booking_id).join(', ');
+        alert(`🎉 ${formData.passes.length} Bookings created successfully!\n\nBooking IDs: ${bookingIds}\nCustomer: ${formData.buyer_name}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
+        
+        resetForm();
         
         if (onBookingCreated) {
           onBookingCreated();
@@ -153,67 +188,9 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         if (onClose) {
           onClose();
         }
-        // Always navigate to bookings after successful creation
         setTimeout(() => {
           navigate('/bookings');
         }, 100);
-      } else {
-        const errorData = await response.json();
-        
-        // Handle duplicate phone number error
-        if (errorData.message?.includes('already has a booking') && errorData.existingBooking) {
-          const existing = errorData.existingBooking;
-          const userChoice = confirm(
-            `⚠️ Phone number already has a booking!\n\n` +
-            `Existing Booking:\n` +
-            `ID: ${existing.booking_id}\n` +
-            `Name: ${existing.buyer_name}\n` +
-            `Status: ${existing.payment_status}\n\n` +
-            `Click OK to create another booking for this number, or Cancel to change phone number.`
-          );
-          
-          if (!userChoice) {
-            // User chose to change phone number
-            return;
-          }
-          
-          // User chose to continue - retry with force flag
-          saleData.force_duplicate = true;
-          const retryResponse = await fetch(url, {
-            method: method,
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(saleData)
-          });
-          
-          if (retryResponse.ok) {
-            const booking = await retryResponse.json();
-            const action = editData ? 'updated' : 'created';
-            alert(`🎉 Booking ${action} successfully!\n\nBooking ID: ${booking.booking_id || booking.booking?.booking_id}\nCustomer: ${formData.buyer_name}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
-            
-            if (!editData) {
-              resetForm();
-            }
-            
-            if (onBookingCreated) {
-              onBookingCreated();
-            }
-            if (onClose) {
-              onClose();
-            }
-            // Always navigate to bookings after successful creation
-            setTimeout(() => {
-              navigate('/bookings');
-            }, 100);
-            return;
-          }
-        }
-        
-        // Handle other errors
-        const action = editData ? 'update' : 'create';
-        throw new Error(errorData.message || `Failed to ${action} booking`);
       }
     } catch (error) {
       alert('❌ Error: ' + error.message);
@@ -234,7 +211,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       pass_type_id: firstPassType?._id || '',
       buyer_name: '',
       buyer_phone: '',
-      passes: [{ people_count: firstPassType?.name === 'Couple' ? 2 : 1, buyer_details: { name: '', phone: '' } }],
+      passes: [{ people_count: firstPassType?.name === 'Couple' ? 2 : firstPassType?.name === 'Family' ? 5 : 1, buyer_details: {} }],
       payment_mode: 'Cash',
       payment_status: 'Paid',
       custom_price: '',
@@ -278,7 +255,14 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
               <select
                 className="w-full p-4 border-2 border-blue-200 rounded-xl text-lg bg-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
                 value={formData.pass_type_id}
-                onChange={(e) => setFormData({...formData, pass_type_id: e.target.value})}
+                onChange={(e) => {
+                  const selectedPassType = passTypes.find(p => p._id === e.target.value);
+                  setFormData({
+                    ...formData, 
+                    pass_type_id: e.target.value,
+                    passes: [{ people_count: selectedPassType?.name === 'Couple' ? 2 : selectedPassType?.name === 'Family' ? 5 : 1, buyer_details: {} }]
+                  });
+                }}
                 required
               >
                 <option value="">Choose a pass type... ({passTypes.length} available)</option>
@@ -442,20 +426,13 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                               <span className="text-blue-500">👥</span>
                               People Count
                             </label>
-                            {selectedPass.name === 'Couple' ? (
-                              <div className="w-full p-4 border-2 border-gray-200 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100">
-                                <span className="font-semibold text-gray-700">2 (Fixed)</span>
-                              </div>
-                            ) : (
-                              <input
-                                type="number"
-                                min="1"
-                                max={selectedPass.name === 'Family' ? 5 : selectedPass.max_people}
-                                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
-                                value={pass.people_count}
-                                onChange={(e) => updatePass(index, 'people_count', parseInt(e.target.value) || 1)}
-                              />
-                            )}
+                            <input
+                              type="number"
+                              min="1"
+                              className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
+                              value={pass.people_count}
+                              onChange={(e) => updatePass(index, 'people_count', parseInt(e.target.value) || 1)}
+                            />
                           </div>
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1">
@@ -494,33 +471,42 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                         </div>
                       </div>
                       
-                      {/* Individual Pass Details */}
+                      {/* Individual Pass Holder Details */}
                       <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-xl border border-amber-200">
                         <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                           <span className="text-amber-600">📝</span>
-                          Pass #{index + 1} - Holder Details (Optional)
+                          Pass #{index + 1} - Holder Details ({pass.people_count} {pass.people_count === 1 ? 'Person' : 'People'})
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-600 mb-2">Holder Name</label>
-                            <input
-                              type="text"
-                              className="w-full p-4 border-2 border-amber-200 rounded-xl bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all"
-                              placeholder="Enter holder name (optional)"
-                              value={pass.buyer_details.name}
-                              onChange={(e) => updatePass(index, 'name', e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-600 mb-2">Holder Phone</label>
-                            <input
-                              type="tel"
-                              className="w-full p-4 border-2 border-amber-200 rounded-xl bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all"
-                              placeholder="Enter phone number (optional)"
-                              value={pass.buyer_details.phone}
-                              onChange={(e) => updatePass(index, 'phone', e.target.value)}
-                            />
-                          </div>
+                        <div className="space-y-4">
+                          {Array.from({ length: pass.people_count }, (_, personIndex) => (
+                            <div key={personIndex} className="bg-white border border-gray-200 rounded-lg p-3">
+                              <h5 className="text-sm font-medium text-gray-700 mb-2">
+                                Person {personIndex + 1} Details {personIndex === 0 ? '(Optional)' : ''}
+                              </h5>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
+                                  <input
+                                    type="text"
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                    placeholder="Enter full name"
+                                    value={pass.buyer_details[`person_${personIndex}_name`] || ''}
+                                    onChange={(e) => updatePass(index, `person_${personIndex}_name`, e.target.value)}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                                  <input
+                                    type="tel"
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                    placeholder="Phone number"
+                                    value={pass.buyer_details[`person_${personIndex}_phone`] || ''}
+                                    onChange={(e) => updatePass(index, `person_${personIndex}_phone`, e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -573,9 +559,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                 <input
                   type="tel"
                   required
-                  pattern="[0-9]{10}"
                   className="w-full p-3 border-2 border-gray-300 rounded-lg"
-                  placeholder="10-digit number"
+                  placeholder="Enter mobile number"
                   value={formData.buyer_phone}
                   onChange={(e) => setFormData({...formData, buyer_phone: e.target.value})}
                 />

@@ -15,7 +15,8 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
     payment_mode: 'Cash',
     upi_id: '',
     transaction_id: '',
-    notes: ''
+    notes: '',
+    pass_holders: []
   });
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +31,8 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
           payment_mode: editData.payment_mode,
           upi_id: '',
           transaction_id: '',
-          notes: editData.notes || ''
+          notes: editData.notes || '',
+          pass_holders: editData.pass_holders || []
         });
       }
     }
@@ -49,7 +51,11 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
         const data = await response.json();
         setPassTypes(data);
         if (data.length > 0) {
-          setFormData(prev => ({ ...prev, pass_type_id: data[0]._id }));
+          setFormData(prev => ({ 
+            ...prev, 
+            pass_type_id: data[0]._id,
+            pass_holders: Array(5).fill({ name: '', phone: '' })
+          }));
         }
       }
     } catch (error) {
@@ -67,7 +73,8 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
         pass_type_id: selectedPass._id,
         buyer_name: formData.buyer_name,
         buyer_phone: formData.buyer_phone,
-        total_people: selectedPass.max_people,
+        total_people: 1,
+        pass_holders: formData.pass_holders.filter(holder => holder.name.trim()),
         payment_mode: formData.payment_mode,
         payment_status: 'Paid',
         notes: formData.notes || `${formData.payment_mode} payment${formData.transaction_id ? ` - TXN: ${formData.transaction_id}` : ''}${formData.upi_id ? ` - UPI: ${formData.upi_id}` : ''}`
@@ -90,7 +97,7 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
       
       const booking = await response.json();
       alert(`Booking ${editData ? 'updated' : 'created'} successfully!\nBooking ID: ${booking.booking_id}`);
-      setFormData({ pass_type_id: passTypes[0]?._id || '', buyer_name: '', buyer_phone: '', payment_mode: 'Cash', upi_id: '', transaction_id: '', notes: '' });
+      setFormData({ pass_type_id: passTypes[0]?._id || '', buyer_name: '', buyer_phone: '', payment_mode: 'Cash', upi_id: '', transaction_id: '', notes: '', pass_holders: [] });
       onBookingCreated?.();
       onClose();
     } catch (error) {
@@ -100,6 +107,14 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
     }
   };
 
+  const updatePassHolder = (index, field, value) => {
+    const updatedHolders = [...formData.pass_holders];
+    updatedHolders[index] = { ...updatedHolders[index], [field]: value };
+    setFormData({ ...formData, pass_holders: updatedHolders });
+  };
+
+  const selectedPassType = passTypes.find(p => p._id === formData.pass_type_id);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={editData ? "Edit Booking" : "Create New Booking"}>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -108,7 +123,14 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
           <select
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={formData.pass_type_id}
-            onChange={(e) => setFormData({...formData, pass_type_id: e.target.value})}
+            onChange={(e) => {
+              const selectedPass = passTypes.find(p => p._id === e.target.value);
+              setFormData({
+                ...formData, 
+                pass_type_id: e.target.value,
+                pass_holders: selectedPass ? Array(5).fill({ name: '', phone: '' }) : []
+              });
+            }}
           >
             {passTypes.map((passType) => (
               <option key={passType._id} value={passType._id}>{passType.name} Pass - ₹{passType.price}</option>
@@ -133,13 +155,52 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
           <input
             type="tel"
             required
-            pattern="[0-9]{10}"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter 10-digit mobile number"
+            placeholder="Enter mobile number"
             value={formData.buyer_phone}
             onChange={(e) => setFormData({...formData, buyer_phone: e.target.value})}
           />
         </div>
+
+        {/* Pass Holder Details Section */}
+        {selectedPassType && formData.pass_holders.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-3">
+              Pass Holder Details ({selectedPassType.max_people} {selectedPassType.max_people === 1 ? 'Person' : 'People'})
+            </h3>
+            <div className="space-y-4">
+              {formData.pass_holders.map((holder, index) => (
+                <div key={index} className="bg-white border border-gray-200 rounded-lg p-3">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    Person {index + 1} Details {index === 0 ? '(Optional)' : ''}
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Enter full name"
+                        value={holder.name}
+                        onChange={(e) => updatePassHolder(index, 'name', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                      <input
+                        type="tel"
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Phone number"
+                        value={holder.phone}
+                        onChange={(e) => updatePassHolder(index, 'phone', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Payment Mode</label>
