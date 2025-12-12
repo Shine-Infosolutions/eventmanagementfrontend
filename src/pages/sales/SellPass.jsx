@@ -25,17 +25,74 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
   useEffect(() => {
     loadPassTypes();
     if (editData) {
-      setFormData({
-        pass_type_id: editData.pass_type_id?._id || editData.pass_type_id,
+      let passes = [];
+      
+      if (editData.passes && editData.passes.length > 0) {
+        // New structure with passes array
+        passes = editData.passes.map((pass, index) => {
+          const buyer_details = {};
+          if (pass.pass_holders && pass.pass_holders.length > 0) {
+            pass.pass_holders.forEach((holder, holderIndex) => {
+              if (holder.name || holder.phone) {
+                buyer_details[`person_${holderIndex}_name`] = holder.name || '';
+                buyer_details[`person_${holderIndex}_phone`] = holder.phone || '';
+              }
+            });
+          }
+          return {
+            people_count: pass.people_count || 1,
+            buyer_details: buyer_details
+          };
+        });
+      } else {
+        // Old structure - single pass
+        console.log('Using OLD structure');
+        console.log('Processing pass_holders:', editData.pass_holders);
+        const buyer_details = {};
+        if (editData.pass_holders && editData.pass_holders.length > 0) {
+          editData.pass_holders.forEach((holder, holderIndex) => {
+            if (holder.name || holder.phone) {
+              buyer_details[`person_${holderIndex}_name`] = holder.name || '';
+              buyer_details[`person_${holderIndex}_phone`] = holder.phone || '';
+            }
+          });
+        }
+        passes = [{
+          people_count: editData.total_people || editData.pass_holders?.length || 1,
+          buyer_details: buyer_details
+        }];
+        console.log('Created passes array:', passes);
+        console.log('Final buyer_details:', passes[0]?.buyer_details);
+      }
+      
+      const newFormData = {
+        pass_type_id: editData.pass_type_id?.$oid || editData.pass_type_id?._id || editData.pass_type_id || (editData.passes && editData.passes[0]?.pass_type_id),
         buyer_name: editData.buyer_name || '',
         buyer_phone: editData.buyer_phone || '',
-        passes: editData.passes || [{ people_count: editData.total_people || 2, buyer_details: {} }],
+        passes: passes,
         payment_mode: editData.payment_mode || 'Cash',
         payment_status: editData.payment_status || 'Paid',
         custom_price: editData.custom_price || '',
         upi_id: '',
         transaction_id: ''
-      });
+      };
+      
+      setFormData(newFormData);
+      
+      // Force component re-render after state update
+      setTimeout(() => {
+        setFormData(prev => ({...prev}));
+      }, 0);
+      
+      // Force re-render with delay to ensure state is set
+      setTimeout(() => {
+        setFormData(prev => ({...prev, _forceUpdate: Date.now()}));
+      }, 200);
+      
+      // Additional force update to ensure inputs are populated
+      setTimeout(() => {
+        setFormData(prev => ({...prev, _forceUpdate2: Date.now()}));
+      }, 500);
     }
   }, [editData]);
 
@@ -53,7 +110,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         const data = await response.json();
         const activeTypes = data.filter(pt => pt.is_active);
         setPassTypes(activeTypes);
-        if (activeTypes.length > 0) {
+        if (activeTypes.length > 0 && !editData) {
           const firstType = activeTypes[0];
           setFormData(prev => ({ 
             ...prev, 
@@ -68,6 +125,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
   };
 
   const addPass = () => {
+    const selectedPass = passTypes.find(p => p._id === formData.pass_type_id);
     const defaultPeopleCount = selectedPass?.name === 'Couple' ? 2 : selectedPass?.name === 'Family' ? 5 : 1;
     const defaultMaxPeople = selectedPass?.name === 'Family' ? 5 : selectedPass?.max_people || 2;
     setFormData({
@@ -162,7 +220,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       
       console.log('Sending booking data:', saleData);
       
-      const response = await fetch(`${API_URL}/api/bookings/force`, {
+      const response = await fetch(`${API_URL}/api/bookings`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -483,6 +541,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                           <span className="text-amber-600">📝</span>
                           Pass #{index + 1} - Holder Details ({pass.people_count} {pass.people_count === 1 ? 'Person' : 'People'})
                         </h4>
+                        {/* <div className="text-xs text-blue-500 mb-2">Pass Debug: {JSON.stringify(pass.buyer_details)}</div> */}
                         <div className="space-y-4">
                           {Array.from({ length: pass.people_count }, (_, personIndex) => (
                             <div key={personIndex} className="bg-white border border-gray-200 rounded-lg p-3">
@@ -496,9 +555,10 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                                     type="text"
                                     className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-amber-500"
                                     placeholder="Enter full name"
-                                    value={pass.buyer_details[`person_${personIndex}_name`] || ''}
+                                    value={pass.buyer_details?.[`person_${personIndex}_name`] || ''}
                                     onChange={(e) => updatePass(index, `person_${personIndex}_name`, e.target.value)}
                                   />
+                                  {/* <div className="text-xs text-red-500">Debug: {pass.buyer_details?.[`person_${personIndex}_name`] || 'EMPTY'}</div> */}
                                 </div>
                                 <div>
                                   <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
@@ -506,7 +566,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                                     type="tel"
                                     className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-amber-500"
                                     placeholder="Phone number"
-                                    value={pass.buyer_details[`person_${personIndex}_phone`] || ''}
+                                    value={pass.buyer_details?.[`person_${personIndex}_phone`] || ''}
                                     onChange={(e) => updatePass(index, `person_${personIndex}_phone`, e.target.value)}
                                   />
                                 </div>

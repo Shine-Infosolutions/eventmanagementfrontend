@@ -104,19 +104,31 @@ const BookingList = () => {
   const loadBookings = async () => {
     try {
       const token = localStorage.getItem('token');
+      console.log('Loading bookings from:', `${API_URL}/api/bookings`);
+      
       const response = await fetch(`${API_URL}/api/bookings`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+      
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
+      
       if (response.ok) {
-        const data = await response.json();
-        setBookings(data);
-        setFilteredBookings(data);
+        setBookings(data || []);
+        setFilteredBookings(data || []);
+      } else {
+        console.error('API Error:', data);
+        setBookings([]);
+        setFilteredBookings([]);
       }
     } catch (error) {
       console.error('Error loading bookings:', error);
+      setBookings([]);
+      setFilteredBookings([]);
     } finally {
       setLoading(false);
     }
