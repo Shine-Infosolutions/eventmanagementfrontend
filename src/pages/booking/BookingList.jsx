@@ -50,10 +50,25 @@ const BookingList = () => {
     const customerPhone = booking?.buyer_phone || '';
     const customerName = booking?.buyer_name || 'Customer';
     
-    // Clean phone number and add country code if needed
+    // Clean phone number and format properly
     let cleanPhone = customerPhone.replace(/[^0-9]/g, '');
-    if (cleanPhone.length === 10 && !cleanPhone.startsWith('91')) {
+    
+    // Handle different phone number formats
+    if (cleanPhone.length === 10) {
+      // Indian 10-digit number, add country code
       cleanPhone = '91' + cleanPhone;
+    } else if (cleanPhone.length === 11 && cleanPhone.startsWith('0')) {
+      // Remove leading 0 and add country code
+      cleanPhone = '91' + cleanPhone.substring(1);
+    } else if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) {
+      // Already has country code
+      cleanPhone = cleanPhone;
+    } else if (cleanPhone.length > 12) {
+      // Remove extra digits from the beginning
+      cleanPhone = cleanPhone.slice(-12);
+      if (!cleanPhone.startsWith('91')) {
+        cleanPhone = '91' + cleanPhone.slice(-10);
+      }
     }
     
     const passLink = `https://eventfrontend-pi.vercel.app/pass/${bookingId}`;
