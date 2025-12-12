@@ -474,18 +474,20 @@ const BookingList = () => {
       </div>
       
       {showSellPass && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-4">
-            <div className="flex justify-between items-center p-4 border-b">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50">
+          <div className="h-full w-full bg-white sm:rounded-lg sm:max-w-4xl sm:mx-auto sm:my-4 sm:max-h-[95vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
               <h2 className="text-lg sm:text-xl font-bold">Create New Booking</h2>
               <button 
                 onClick={() => setShowSellPass(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
+                className="text-gray-500 hover:text-gray-700 text-xl p-2 touch-manipulation"
               >
-                X
+                ✕
               </button>
             </div>
-            <SellPass onClose={() => setShowSellPass(false)} onBookingCreated={loadBookings} />
+            <div className="h-full overflow-y-auto pb-20">
+              <SellPass onClose={() => setShowSellPass(false)} onBookingCreated={loadBookings} />
+            </div>
           </div>
         </div>
       )}

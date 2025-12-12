@@ -216,7 +216,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
   const totalPrice = currentPrice * formData.passes.length;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="bg-gray-100">
       <div className="w-full">
         
         {/* Header */}
