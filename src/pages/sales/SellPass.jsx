@@ -149,9 +149,11 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         }
         if (onClose) {
           onClose();
-        } else {
-          navigate('/bookings');
         }
+        // Always navigate to bookings after successful creation
+        setTimeout(() => {
+          navigate('/bookings');
+        }, 100);
       } else {
         const errorData = await response.json();
         
