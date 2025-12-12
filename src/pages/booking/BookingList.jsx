@@ -50,11 +50,17 @@ const BookingList = () => {
     const customerPhone = booking?.buyer_phone || '';
     const customerName = booking?.buyer_name || 'Customer';
     
+    // Clean phone number and add country code if needed
+    let cleanPhone = customerPhone.replace(/[^0-9]/g, '');
+    if (cleanPhone.length === 10 && !cleanPhone.startsWith('91')) {
+      cleanPhone = '91' + cleanPhone;
+    }
+    
     const passLink = `https://eventfrontend-pi.vercel.app/pass/${bookingId}`;
     
     const message = `New Year 2025 Event\n\nHi ${customerName}!\n\nYour Event Pass is Ready!\n\nPass ID: ${booking.booking_id}\nType: ${booking.pass_type_id?.name}\nPeople: ${booking.total_people}\nAmount: Rs${booking.pass_type_id?.price}\n\nView & Print Your Pass:\n${passLink}\n\nClick the link to view your pass with QR code!\nShow the QR code at the gate for entry.\n\nSee you at the event!`;
     
-    const whatsappUrl = `https://wa.me/${customerPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     
     const confirmed = confirm(
       `Send pass via WhatsApp to:\n\n${customerName}\n${customerPhone}\n\nThis will open WhatsApp with the pass link.\n\nContinue?`
