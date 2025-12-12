@@ -10,7 +10,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const menuItems = {
     Admin: [
       { id: 'dashboard', label: 'Dashboard', icon: MdDashboard, path: '/dashboard' },
-      { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
+      // { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
       { id: 'manage-pass-types', label: 'Manage Pass Types', icon: () => <span className="text-lg">🎫</span>, path: '/manage-pass-types' },
       { id: 'bookings', label: 'All Bookings', icon: MdList, path: '/bookings' },
       { id: 'gate', label: 'Gate Entry', icon: MdLogin, path: '/gate-entry' },
