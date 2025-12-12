@@ -219,12 +219,13 @@ const BookingList = () => {
                   'Booking ID': booking.booking_id,
                   'Customer Name': booking.buyer_name,
                   'Phone': booking.buyer_phone,
-                  'Pass Type': booking.pass_type_id?.name,
-                  'Price': booking.pass_type_id?.price,
+                  'Pass Types': booking.passes ? booking.passes.map(p => p.pass_type_name).join(', ') : booking.pass_type_id?.name,
+                  'Total Passes': booking.total_passes || 1,
+                  'Total Price': booking.passes ? booking.passes.reduce((sum, p) => sum + p.pass_type_price, 0) : booking.pass_type_id?.price,
                   'Payment Mode': booking.payment_mode,
                   'Payment Status': booking.payment_status,
                   'Total People': booking.total_people,
-                  'People Entered': booking.people_entered,
+                  'People Entered': booking.total_people_entered || booking.people_entered || 0,
                   'Checked In': booking.checked_in ? 'Yes' : 'No',
                   'Date': new Date(booking.createdAt).toLocaleDateString(),
                   'Time': new Date(booking.createdAt).toLocaleTimeString()
@@ -306,6 +307,14 @@ const BookingList = () => {
               <option value="pending">Not Checked In</option>
             </select>
           </div>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setFilters({ search: '', passType: 'all', paymentStatus: 'all', checkinStatus: 'all' })}
+              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm"
+            >
+              Clear Filters
+            </button>
+          </div>
         </div>
       </div>
 
@@ -336,7 +345,7 @@ const BookingList = () => {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3">
                     <div className="mb-2 sm:mb-0">
                       <div className="font-medium text-gray-900 text-sm">{booking.booking_id}</div>
-                      <div className="text-xs text-gray-500">People: {booking.people_entered}/{booking.total_people}</div>
+                      <div className="text-xs text-gray-500">People: {booking.total_people_entered || booking.people_entered || 0}/{booking.total_people}</div>
                     </div>
                     <div className="self-start">{getStatusBadge(booking)}</div>
                   </div>
@@ -349,8 +358,21 @@ const BookingList = () => {
                     
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                       <div>
-                        {getPassTypeBadge(booking.pass_type_id?.name)}
-                        <div className="text-xs text-gray-500 mt-1">Rs {booking.pass_type_id?.price}</div>
+                        {booking.passes && booking.passes.length > 0 ? (
+                          <div>
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                              {booking.passes.length} Pass{booking.passes.length > 1 ? 'es' : ''}
+                            </span>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Rs {booking.passes.reduce((sum, p) => sum + p.pass_type_price, 0)}
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            {getPassTypeBadge(booking.pass_type_id?.name)}
+                            <div className="text-xs text-gray-500 mt-1">Rs {booking.pass_type_id?.price}</div>
+                          </div>
+                        )}
                       </div>
                       {getPaymentModeBadge(booking.payment_mode)}
                     </div>
@@ -404,7 +426,7 @@ const BookingList = () => {
                       <tr key={booking._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{booking.booking_id}</div>
-                          <div className="text-xs text-gray-500">People: {booking.people_entered}/{booking.total_people}</div>
+                          <div className="text-xs text-gray-500">People: {booking.total_people_entered || booking.people_entered || 0}/{booking.total_people}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
@@ -413,8 +435,21 @@ const BookingList = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {getPassTypeBadge(booking.pass_type_id?.name)}
-                          <div className="text-xs text-gray-500 mt-1">₹{booking.pass_type_id?.price}</div>
+                          {booking.passes && booking.passes.length > 0 ? (
+                            <div>
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {booking.passes.length} Pass{booking.passes.length > 1 ? 'es' : ''}
+                              </span>
+                              <div className="text-xs text-gray-500 mt-1">
+                                ₹{booking.passes.reduce((sum, p) => sum + p.pass_type_price, 0)}
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              {getPassTypeBadge(booking.pass_type_id?.name)}
+                              <div className="text-xs text-gray-500 mt-1">₹{booking.pass_type_id?.price}</div>
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getPaymentModeBadge(booking.payment_mode)}
@@ -522,12 +557,27 @@ const BookingList = () => {
                   <p className="text-lg">{viewingBooking.buyer_phone}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500">Pass Type</label>
-                  <p className="text-lg">{viewingBooking.pass_type_id?.name}</p>
+                  <label className="block text-sm font-medium text-gray-500">Pass Type(s)</label>
+                  {viewingBooking.passes && viewingBooking.passes.length > 0 ? (
+                    <div>
+                      <p className="text-lg">{viewingBooking.passes.length} Pass{viewingBooking.passes.length > 1 ? 'es' : ''}</p>
+                      <div className="text-sm text-gray-600">
+                        {viewingBooking.passes.map((pass, idx) => (
+                          <div key={idx}>{pass.pass_type_name} (x{pass.people_count})</div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-lg">{viewingBooking.pass_type_id?.name}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500">Amount</label>
-                  <p className="text-lg font-semibold text-green-600">₹{viewingBooking.pass_type_id?.price}</p>
+                  <p className="text-lg font-semibold text-green-600">
+                    ₹{viewingBooking.passes 
+                      ? viewingBooking.passes.reduce((sum, p) => sum + p.pass_type_price, 0)
+                      : viewingBooking.pass_type_id?.price}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500">Payment Status</label>
@@ -545,7 +595,7 @@ const BookingList = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500">People</label>
-                  <p className="text-lg">{viewingBooking.people_entered || 0}/{viewingBooking.total_people}</p>
+                  <p className="text-lg">{viewingBooking.total_people_entered || viewingBooking.people_entered || 0}/{viewingBooking.total_people}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500">Check-in Status</label>
@@ -563,20 +613,50 @@ const BookingList = () => {
                 </div>
               </div>
               
-              {viewingBooking.pass_holders && viewingBooking.pass_holders.length > 0 && (
+              {/* Pass Holder Details */}
+              {viewingBooking.passes && viewingBooking.passes.length > 0 ? (
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-500">Pass Holder Details</label>
-                  <div className="bg-gray-50 p-3 rounded space-y-2">
-                    {viewingBooking.pass_holders.map((holder, index) => (
-                      holder.name && (
-                        <div key={index} className="text-sm">
-                          <strong>Person {index + 1}:</strong> {holder.name}
-                          {holder.phone && ` | ${holder.phone}`}
+                  <div className="bg-gray-50 p-3 rounded space-y-3">
+                    {viewingBooking.passes.map((pass, passIndex) => (
+                      <div key={passIndex} className="border-b pb-2 last:border-b-0">
+                        <div className="font-medium text-sm text-gray-700 mb-1">
+                          Pass {passIndex + 1}: {pass.pass_type_name} ({pass.people_count} people)
                         </div>
-                      )
+                        {pass.pass_holders && pass.pass_holders.length > 0 ? (
+                          <div className="space-y-1">
+                            {pass.pass_holders.map((holder, holderIndex) => (
+                              holder.name && (
+                                <div key={holderIndex} className="text-sm text-gray-600">
+                                  <strong>Person {holderIndex + 1}:</strong> {holder.name}
+                                  {holder.phone && ` | ${holder.phone}`}
+                                </div>
+                              )
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-500">No holder details provided</div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
+              ) : (
+                viewingBooking.pass_holders && viewingBooking.pass_holders.length > 0 && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-500">Pass Holder Details</label>
+                    <div className="bg-gray-50 p-3 rounded space-y-2">
+                      {viewingBooking.pass_holders.map((holder, index) => (
+                        holder.name && (
+                          <div key={index} className="text-sm">
+                            <strong>Person {index + 1}:</strong> {holder.name}
+                            {holder.phone && ` | ${holder.phone}`}
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                )
               )}
               
               {viewingBooking.notes && (

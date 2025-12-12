@@ -69,6 +69,22 @@ const GateEntry = () => {
           );
           
           if (found) {
+            // Calculate total capacity and entered from passes array if it exists
+            if (found.passes && Array.isArray(found.passes)) {
+              found.total_people = found.passes.reduce((sum, pass) => sum + pass.people_count, 0);
+              found.total_people_entered = found.passes.reduce((sum, pass) => sum + (pass.people_entered || 0), 0);
+            } else {
+              // Fallback for old structure - find all bookings for same phone
+              const allBookingsForPhone = bookings.filter(b => b.buyer_phone === found.buyer_phone);
+              const totalCapacity = allBookingsForPhone.reduce((sum, booking) => sum + booking.total_people, 0);
+              const totalEntered = allBookingsForPhone.reduce((sum, booking) => sum + (booking.people_entered || 0), 0);
+              
+              found.total_people = totalCapacity;
+              found.people_entered = totalEntered;
+            }
+          }
+          
+          if (found) {
             console.log('✅ Found via fallback:', found);
             setSearchResult(found);
             setPeopleCount(1);
@@ -216,7 +232,12 @@ const GateEntry = () => {
                 placeholder="Enter Pass ID, Phone Number, or Name"
                 className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base sm:text-lg"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  if (e.target.value.trim()) {
+                    setTimeout(() => handleSearch(e.target.value), 500);
+                  }
+                }}
                 onKeyPress={handleKeyPress}
               />
             </div>
@@ -304,46 +325,39 @@ const GateEntry = () => {
       )}
 
       {searchResult && searchResult !== 'not_found' && (
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 sm:p-6">
-            <div className="flex items-center justify-between">
+        <div className="bg-white rounded-lg shadow-lg border">
+          <div className="bg-blue-600 text-white p-3">
+            <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold">{searchResult.pass_type_id?.name} Pass</h2>
-                <p className="text-blue-100 mt-1">Pass ID: {searchResult.booking_id}</p>
+                <h3 className="font-bold">
+                  {searchResult.passes && searchResult.passes.length > 0 
+                    ? `${searchResult.passes.length} Pass${searchResult.passes.length > 1 ? 'es' : ''} (${searchResult.passes.map(p => p.pass_type_name || 'Pass').join(', ')})` 
+                    : (searchResult.pass_type_id?.name || 'Pass')}
+                </h3>
+                <p className="text-xs opacity-90">#{searchResult.booking_id}</p>
               </div>
-              <div className="text-right">
-                <MdConfirmationNumber className="text-3xl mb-2" />
-                <div className="text-sm text-blue-100">New Year 2025</div>
-              </div>
+              <span className="text-xs bg-white/20 px-2 py-1 rounded">NY 2025</span>
             </div>
           </div>
 
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Buyer Name</label>
-                  <p className="text-lg font-semibold text-gray-900">{searchResult.buyer_name}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Phone Number</label>
-                  <p className="text-lg font-semibold text-gray-900">{searchResult.buyer_phone}</p>
-                </div>
+          <div className="p-3">
+            <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
+              <div className="text-center">
+                <p className="text-gray-500">Guest</p>
+                <p className="font-semibold">{searchResult.buyer_name}</p>
               </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Pass Type</label>
-                  <p className="text-lg font-semibold text-gray-900">{searchResult.pass_type_id?.name}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Max People Allowed</label>
-                  <p className="text-lg font-semibold text-gray-900">{searchResult.people_entered || 0}/{searchResult.total_people} entered</p>
-                </div>
+              <div className="text-center">
+                <p className="text-gray-500">Phone</p>
+                <p className="font-semibold">{searchResult.buyer_phone}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-gray-500">Entry Status</p>
+                <p className="font-semibold">{searchResult.total_people_entered || searchResult.people_entered || 0} of {searchResult.total_people}</p>
               </div>
             </div>
 
             <div className="border-t pt-6">
-              {searchResult.checked_in && (searchResult.people_entered || 0) >= searchResult.total_people ? (
+              {searchResult.checked_in && (searchResult.total_people_entered || searchResult.people_entered || 0) >= searchResult.total_people ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6">
                   <div className="flex items-center">
                     <FiAlertTriangle className="text-red-400 text-4xl mr-4 flex-shrink-0" />
@@ -397,7 +411,7 @@ const GateEntry = () => {
                     </div>
                   )}
                 </div>
-              ) : (searchResult.people_entered || 0) >= searchResult.total_people ? (
+              ) : (searchResult.total_people_entered || searchResult.people_entered || 0) >= searchResult.total_people ? (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                   <div className="flex items-center">
                     <FiCheckCircle className="text-green-400 text-4xl mr-4" />
@@ -415,33 +429,26 @@ const GateEntry = () => {
                   </div>
                 </div>
               ) : (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div className="bg-green-50 border border-green-200 rounded p-3">
                   <div className="text-center">
-                    <MdConfirmationNumber className="text-blue-400 text-4xl mb-4" />
-                    <h3 className="text-lg font-semibold text-blue-800 mb-2">Ready for Check-In</h3>
-                    <p className="text-blue-600 mb-4">Remaining: {searchResult.total_people - (searchResult.people_entered || 0)} people can enter</p>
+                    <p className="text-sm font-bold text-green-800 mb-2">Ready for Entry</p>
+                    <p className="text-xs text-green-700 mb-2">
+                      {searchResult.total_people - (searchResult.total_people_entered || searchResult.people_entered || 0)} can enter
+                    </p>
                     
-                    {searchResult.people_entered > 0 && (
-                      <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <p className="text-yellow-800 text-sm">
-                          ⚠️ Partial entry: {searchResult.people_entered} people already entered
-                        </p>
-                        {searchResult.checked_in_at && (
-                          <p className="text-yellow-700 text-xs mt-1">
-                            Last entry: {new Date(searchResult.checked_in_at).toLocaleString()} by {searchResult.scanned_by}
-                          </p>
-                        )}
+                    {(searchResult.total_people_entered || searchResult.people_entered || 0) > 0 && (
+                      <div className="mb-2 p-1 bg-amber-100 rounded text-xs text-amber-800">
+                        {searchResult.total_people_entered || searchResult.people_entered} entered
                       </div>
                     )}
                     
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">People Entering Now</label>
+                    <div className="mb-2">
                       <select
                         value={peopleCount}
                         onChange={(e) => setPeopleCount(Number(e.target.value))}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-green-500"
                       >
-                        {Array.from({ length: searchResult.total_people - (searchResult.people_entered || 0) }, (_, i) => (
+                        {Array.from({ length: searchResult.total_people - (searchResult.total_people_entered || searchResult.people_entered || 0) }, (_, i) => (
                           <option key={i + 1} value={i + 1}>{i + 1} person{i > 0 ? 's' : ''}</option>
                         ))}
                       </select>
@@ -449,9 +456,10 @@ const GateEntry = () => {
                     
                     <button
                       onClick={() => handleCheckIn(false)}
-                      className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-lg"
+                      className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 font-semibold"
                     >
-                      <FiCheckCircle className="inline mr-2" /> Check In {peopleCount} Person{peopleCount > 1 ? 's' : ''}
+                      <FiCheckCircle className="inline mr-1" /> 
+                      Check In {peopleCount}
                     </button>
                   </div>
                 </div>

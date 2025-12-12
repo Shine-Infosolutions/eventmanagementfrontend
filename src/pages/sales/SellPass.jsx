@@ -114,6 +114,26 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       
       const token = localStorage.getItem('token');
       
+      // Format passes data for new structure
+      const passes = formData.passes.map((pass, passIndex) => {
+        const passHolders = [];
+        for (let i = 0; i < pass.people_count; i++) {
+          const personData = {
+            name: pass.buyer_details[`person_${i}_name`] || '',
+            phone: pass.buyer_details[`person_${i}_phone`] || ''
+          };
+          if (personData.name) {
+            passHolders.push(personData);
+          }
+        }
+        
+        return {
+          pass_type_id: formData.pass_type_id,
+          people_count: pass.people_count,
+          pass_holders: passHolders
+        };
+      });
+
       // Format pass holders data
       const passHolders = [];
       formData.passes.forEach((pass, passIndex) => {
@@ -128,57 +148,43 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         }
       });
 
-      // Create separate booking for each pass
-      const bookings = [];
+      // Use simple booking format
+      const saleData = {
+        pass_type_id: formData.pass_type_id,
+        buyer_name: formData.buyer_name,
+        buyer_phone: formData.buyer_phone,
+        total_people: totalPeople,
+        pass_holders: passHolders,
+        payment_mode: formData.payment_mode,
+        mark_as_paid: formData.payment_status === 'Paid',
+        notes: `${formData.passes.length} pass${formData.passes.length > 1 ? 'es' : ''} booked. ${buildPaymentNotes()}`
+      };
       
-      for (let i = 0; i < formData.passes.length; i++) {
-        const pass = formData.passes[i];
-        const passHoldersForThisPass = [];
-        
-        for (let j = 0; j < pass.people_count; j++) {
-          const personData = {
-            name: pass.buyer_details[`person_${j}_name`] || '',
-            phone: pass.buyer_details[`person_${j}_phone`] || ''
-          };
-          if (personData.name) {
-            passHoldersForThisPass.push(personData);
-          }
-        }
-        
-        const saleData = {
-          pass_type_id: formData.pass_type_id,
-          buyer_name: formData.buyer_name,
-          buyer_phone: formData.buyer_phone,
-          total_people: pass.people_count,
-          pass_holders: passHoldersForThisPass,
-          payment_mode: formData.payment_mode,
-          mark_as_paid: formData.payment_status === 'Paid',
-          notes: `Pass ${i + 1} of ${formData.passes.length}. ${buildPaymentNotes()}`
-        };
-        
-        const response = await fetch(`${API_URL}/api/bookings`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(saleData)
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || `Failed to create pass ${i + 1}`);
-        }
-        
-        const booking = await response.json();
-        bookings.push(booking);
+      console.log('Sending booking data:', saleData);
+      
+      const response = await fetch(`${API_URL}/api/bookings/force`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(saleData)
+      });
+      
+      console.log('Response status:', response.status);
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
+      
+      if (!response.ok) {
+        throw new Error(responseData.message || 'Failed to create booking');
       }
       
-      const response = { ok: true };
-
+      const booking = responseData;
+      const bookings = [booking];
+      
       if (response.ok) {
-        const bookingIds = bookings.map(b => b.booking_id).join(', ');
-        alert(`🎉 ${formData.passes.length} Bookings created successfully!\n\nBooking IDs: ${bookingIds}\nCustomer: ${formData.buyer_name}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
+        const bookingId = booking.booking_id || 'Generated';
+        alert(`🎉 Booking created successfully!\n\nBooking ID: ${bookingId}\nCustomer: ${formData.buyer_name}\nPasses: ${formData.passes.length}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
         
         resetForm();
         
