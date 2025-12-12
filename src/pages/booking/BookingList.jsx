@@ -314,7 +314,7 @@ const BookingList = () => {
         ) : (
           <>
             {/* Mobile Card View */}
-            <div className="block lg:hidden space-y-4 p-4">
+            <div className="block md:hidden space-y-4 p-4">
               {filteredBookings.map((booking) => (
                 <div key={booking._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3">
@@ -369,7 +369,7 @@ const BookingList = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
