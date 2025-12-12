@@ -21,7 +21,7 @@ const SharedPass = () => {
         console.log('Fetching pass data for ID:', id);
         console.log('API URL:', `${API_URL}/api/bookings/${id}`);
         
-        const response = await fetch(`${API_URL}/api/bookings/${id}`);
+        const response = await fetch(`${API_URL}/api/bookings/${id}/public`);
         
         console.log('Response status:', response.status);
         
