@@ -23,20 +23,30 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
   useEffect(() => {
     if (isOpen) {
       loadPassTypes();
-      if (editData) {
-        setFormData({
-          pass_type_id: editData.pass_type_id?._id || editData.pass_type_id,
-          buyer_name: editData.buyer_name,
-          buyer_phone: editData.buyer_phone,
-          payment_mode: editData.payment_mode,
-          upi_id: '',
-          transaction_id: '',
-          notes: editData.notes || '',
-          pass_holders: editData.pass_holders || []
-        });
-      }
     }
-  }, [isOpen, editData]);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (editData && passTypes.length > 0) {
+      console.log('Setting edit data:', editData);
+      setFormData({
+        pass_type_id: editData.pass_type_id?._id || editData.pass_type_id,
+        buyer_name: editData.buyer_name || '',
+        buyer_phone: editData.buyer_phone || '',
+        payment_mode: editData.payment_mode || 'Cash',
+        upi_id: '',
+        transaction_id: '',
+        notes: editData.notes || '',
+        pass_holders: editData.pass_holders || Array(5).fill({ name: '', phone: '' })
+      });
+    } else if (!editData && passTypes.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        pass_type_id: passTypes[0]._id,
+        pass_holders: Array(5).fill({ name: '', phone: '' })
+      }));
+    }
+  }, [editData, passTypes]);
 
   const loadPassTypes = async () => {
     try {
@@ -50,13 +60,6 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
       if (response.ok) {
         const data = await response.json();
         setPassTypes(data);
-        if (data.length > 0) {
-          setFormData(prev => ({ 
-            ...prev, 
-            pass_type_id: data[0]._id,
-            pass_holders: Array(5).fill({ name: '', phone: '' })
-          }));
-        }
       }
     } catch (error) {
       console.error('Error loading pass types:', error);
@@ -96,7 +99,8 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
       if (!response.ok) throw new Error(`Failed to ${editData ? 'update' : 'create'} booking`);
       
       const booking = await response.json();
-      alert(`Booking ${editData ? 'updated' : 'created'} successfully!\nBooking ID: ${booking.booking_id}`);
+      const bookingId = booking.booking_id || `NY2025-${booking._id?.slice(-6) || 'XXXXXX'}`;
+      alert(`Booking ${editData ? 'updated' : 'created'} successfully!\nBooking ID: ${bookingId}`);
       setFormData({ pass_type_id: passTypes[0]?._id || '', buyer_name: '', buyer_phone: '', payment_mode: 'Cash', upi_id: '', transaction_id: '', notes: '', pass_holders: [] });
       onBookingCreated?.();
       onClose();

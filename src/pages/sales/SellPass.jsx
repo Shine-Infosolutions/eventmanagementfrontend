@@ -24,77 +24,45 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
   useEffect(() => {
     loadPassTypes();
-    if (editData) {
-      let passes = [];
+  }, []);
+
+  useEffect(() => {
+    if (editData && passTypes.length > 0) {
+      console.log('Processing edit data:', editData);
       
-      if (editData.passes && editData.passes.length > 0) {
-        // New structure with passes array
-        passes = editData.passes.map((pass, index) => {
-          const buyer_details = {};
-          if (pass.pass_holders && pass.pass_holders.length > 0) {
-            pass.pass_holders.forEach((holder, holderIndex) => {
-              if (holder.name || holder.phone) {
-                buyer_details[`person_${holderIndex}_name`] = holder.name || '';
-                buyer_details[`person_${holderIndex}_phone`] = holder.phone || '';
-              }
-            });
+      // Extract pass type ID
+      const passTypeId = editData.pass_type_id?.$oid || editData.pass_type_id?._id || editData.pass_type_id;
+      
+      // Build buyer details from pass_holders
+      const buyer_details = {};
+      if (editData.pass_holders && editData.pass_holders.length > 0) {
+        editData.pass_holders.forEach((holder, index) => {
+          if (holder.name || holder.phone) {
+            buyer_details[`person_${index}_name`] = holder.name || '';
+            buyer_details[`person_${index}_phone`] = holder.phone || '';
           }
-          return {
-            people_count: pass.people_count || 1,
-            buyer_details: buyer_details
-          };
         });
-      } else {
-        // Old structure - single pass
-        console.log('Using OLD structure');
-        console.log('Processing pass_holders:', editData.pass_holders);
-        const buyer_details = {};
-        if (editData.pass_holders && editData.pass_holders.length > 0) {
-          editData.pass_holders.forEach((holder, holderIndex) => {
-            if (holder.name || holder.phone) {
-              buyer_details[`person_${holderIndex}_name`] = holder.name || '';
-              buyer_details[`person_${holderIndex}_phone`] = holder.phone || '';
-            }
-          });
-        }
-        passes = [{
-          people_count: editData.total_people || editData.pass_holders?.length || 1,
-          buyer_details: buyer_details
-        }];
-        console.log('Created passes array:', passes);
-        console.log('Final buyer_details:', passes[0]?.buyer_details);
       }
       
-      const newFormData = {
-        pass_type_id: editData.pass_type_id?.$oid || editData.pass_type_id?._id || editData.pass_type_id || (editData.passes && editData.passes[0]?.pass_type_id),
+      const editFormData = {
+        pass_type_id: passTypeId,
         buyer_name: editData.buyer_name || '',
         buyer_phone: editData.buyer_phone || '',
-        passes: passes,
+        passes: [{
+          people_count: editData.total_people || 1,
+          buyer_details: buyer_details
+        }],
         payment_mode: editData.payment_mode || 'Cash',
         payment_status: editData.payment_status || 'Paid',
-        custom_price: editData.custom_price || '',
+        custom_price: '',
         upi_id: '',
         transaction_id: ''
       };
       
-      setFormData(newFormData);
-      
-      // Force component re-render after state update
-      setTimeout(() => {
-        setFormData(prev => ({...prev}));
-      }, 0);
-      
-      // Force re-render with delay to ensure state is set
-      setTimeout(() => {
-        setFormData(prev => ({...prev, _forceUpdate: Date.now()}));
-      }, 200);
-      
-      // Additional force update to ensure inputs are populated
-      setTimeout(() => {
-        setFormData(prev => ({...prev, _forceUpdate2: Date.now()}));
-      }, 500);
+      console.log('Setting edit form data:', editFormData);
+      setFormData(editFormData);
     }
-  }, [editData]);
+  }, [editData, passTypes]);
 
   const loadPassTypes = async () => {
     try {
@@ -241,7 +209,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       const bookings = [booking];
       
       if (response.ok) {
-        const bookingId = booking.booking_id || 'Generated';
+        const bookingId = booking.booking_id || `NY2025-${booking._id?.slice(-6) || 'XXXXXX'}`;
         alert(`🎉 Booking created successfully!\n\nBooking ID: ${bookingId}\nCustomer: ${formData.buyer_name}\nPasses: ${formData.passes.length}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
         
         resetForm();
@@ -475,7 +443,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1">
                               <span className="text-green-500">💰</span>
-                              Pass #{index + 1} - Price
+                              Pass {String(index + 1).padStart(3, '0')} - Price
                             </label>
                             <input
                               type="number"
@@ -539,7 +507,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                       <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-xl border border-amber-200">
                         <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                           <span className="text-amber-600">📝</span>
-                          Pass #{index + 1} - Holder Details ({pass.people_count} {pass.people_count === 1 ? 'Person' : 'People'})
+                          Pass {String(index + 1).padStart(3, '0')} - Holder Details ({pass.people_count} {pass.people_count === 1 ? 'Person' : 'People'})
                         </h4>
                         {/* <div className="text-xs text-blue-500 mb-2">Pass Debug: {JSON.stringify(pass.buyer_details)}</div> */}
                         <div className="space-y-4">

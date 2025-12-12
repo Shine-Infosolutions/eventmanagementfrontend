@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import Button from '../../components/Button';
 import SellPass from '../sales/SellPass';
+import BookingForm from './BookingForm';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -128,8 +129,13 @@ const BookingList = () => {
         
         setPassTypes(passTypesData);
         
-        // Enrich bookings with pass type details
+        // The bookings should already have populated pass_type_id from backend
         const enrichedBookings = bookingsData.map(booking => {
+          // If pass_type_id is already populated (object with name/price), use it
+          if (booking.pass_type_id && typeof booking.pass_type_id === 'object' && booking.pass_type_id.name) {
+            return booking;
+          }
+          // If not populated, find from passTypesData
           const passType = passTypesData.find(pt => pt._id === booking.pass_type_id);
           return {
             ...booking,
