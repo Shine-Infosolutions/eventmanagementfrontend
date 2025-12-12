@@ -67,9 +67,14 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
   const addPass = () => {
     const defaultPeopleCount = selectedPass?.name === 'Couple' ? 2 : 1;
+    const defaultMaxPeople = selectedPass?.name === 'Family' ? 5 : selectedPass?.max_people || 1;
     setFormData({
       ...formData,
-      passes: [...formData.passes, { people_count: defaultPeopleCount, buyer_details: { name: '', phone: '' } }]
+      passes: [...formData.passes, { 
+        people_count: defaultPeopleCount, 
+        max_people: defaultMaxPeople,
+        buyer_details: { name: '', phone: '' } 
+      }]
     });
   };
 
@@ -83,11 +88,9 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
   const updatePass = (index, field, value) => {
     const newPasses = [...formData.passes];
     if (field === 'people_count') {
-      // Limit Family passes to max 5 people
-      if (selectedPass?.name === 'Family' && value > 5) {
-        value = 5;
-      }
       newPasses[index].people_count = value;
+    } else if (field === 'max_people') {
+      newPasses[index].max_people = value;
     } else {
       newPasses[index].buyer_details[field] = value;
     }
@@ -166,7 +169,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
             `ID: ${existing.booking_id}\n` +
             `Name: ${existing.buyer_name}\n` +
             `Status: ${existing.payment_status}\n\n` +
-            `Click OK to continue anyway, or Cancel to change phone number.`
+            `Click OK to create another booking for this number, or Cancel to change phone number.`
           );
           
           if (!userChoice) {
@@ -174,9 +177,38 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
             return;
           }
           
-          // User chose to continue - we could implement override logic here
-          alert('⚠️ Cannot create duplicate booking. Please use a different phone number or edit the existing booking.');
-          return;
+          // User chose to continue - retry with force flag
+          saleData.force_duplicate = true;
+          const retryResponse = await fetch(url, {
+            method: method,
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(saleData)
+          });
+          
+          if (retryResponse.ok) {
+            const booking = await retryResponse.json();
+            const action = editData ? 'updated' : 'created';
+            alert(`🎉 Booking ${action} successfully!\n\nBooking ID: ${booking.booking_id || booking.booking?.booking_id}\nCustomer: ${formData.buyer_name}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
+            
+            if (!editData) {
+              resetForm();
+            }
+            
+            if (onBookingCreated) {
+              onBookingCreated();
+            }
+            if (onClose) {
+              onClose();
+            }
+            // Always navigate to bookings after successful creation
+            setTimeout(() => {
+              navigate('/bookings');
+            }, 100);
+            return;
+          }
         }
         
         // Handle other errors
@@ -218,23 +250,33 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
   const totalPrice = currentPrice * formData.passes.length;
 
   return (
-    <div className="bg-gray-100">
-      <div className="w-full">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="w-full max-w-6xl mx-auto">
         
         {/* Header */}
-        <div className="bg-blue-600 text-white p-4 sm:p-6">
-          <h1 className="text-xl sm:text-2xl font-bold">🎫 Sell Event Pass</h1>
-          <p className="text-sm sm:text-base">New Year 2025 Event</p>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 sm:p-8 rounded-b-2xl shadow-xl">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <span className="text-2xl">🎫</span>
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Event Pass Sales</h1>
+              <p className="text-blue-100 text-sm sm:text-base">New Year 2025 Celebration</p>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white p-4 sm:p-6">
+        <div className="bg-white m-4 sm:m-6 rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             
             {/* Pass Type Selection */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Select Pass Type</label>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+              <label className="block text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span className="text-blue-600">🎫</span>
+                Select Pass Type
+              </label>
               <select
-                className="w-full p-2 sm:p-3 border-2 border-gray-300 rounded-lg text-base sm:text-lg"
+                className="w-full p-4 border-2 border-blue-200 rounded-xl text-lg bg-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
                 value={formData.pass_type_id}
                 onChange={(e) => setFormData({...formData, pass_type_id: e.target.value})}
                 required
@@ -371,112 +413,123 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
             {/* Pass Configuration */}
             {selectedPass && (
-              <div>
-                <h3 className="text-lg font-bold text-gray-700 mb-4">Pass Configuration</h3>
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+                <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                  <span className="text-green-600">⚙️</span>
+                  Pass Configuration
+                </h3>
                 
                 <div className="space-y-4">
                   {formData.passes.map((pass, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Pass #{index + 1} - Price</label>
-                        <input
-                          type="number"
-                          className="w-full p-3 border-2 border-gray-300 rounded-lg"
-                          placeholder="Enter price"
-                          value={formData.custom_price || selectedPass.price}
-                          onChange={(e) => setFormData({...formData, custom_price: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">People Count</label>
-                        {selectedPass.name === 'Couple' ? (
-                          <div className="w-full p-3 border-2 border-gray-300 rounded-lg bg-gray-100">
-                            <span className="font-bold">2 (Fixed)</span>
+                    <div key={index} className="space-y-4">
+                      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1">
+                              <span className="text-green-500">💰</span>
+                              Pass #{index + 1} - Price
+                            </label>
+                            <input
+                              type="number"
+                              className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+                              placeholder="Enter price"
+                              value={formData.custom_price || selectedPass.price}
+                              onChange={(e) => setFormData({...formData, custom_price: e.target.value})}
+                            />
                           </div>
-                        ) : (
-                          <input
-                            type="number"
-                            min="1"
-                            max={selectedPass.name === 'Family' ? 5 : selectedPass.max_people}
-                            className="w-full p-3 border-2 border-gray-300 rounded-lg"
-                            value={pass.people_count}
-                            onChange={(e) => updatePass(index, 'people_count', parseInt(e.target.value) || 1)}
-                          />
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Max People</label>
-                        <div className="w-full p-3 border-2 border-gray-300 rounded-lg bg-gray-50">
-                          {selectedPass.name === 'Family' ? 5 : selectedPass.max_people}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1">
+                              <span className="text-blue-500">👥</span>
+                              People Count
+                            </label>
+                            {selectedPass.name === 'Couple' ? (
+                              <div className="w-full p-4 border-2 border-gray-200 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100">
+                                <span className="font-semibold text-gray-700">2 (Fixed)</span>
+                              </div>
+                            ) : (
+                              <input
+                                type="number"
+                                min="1"
+                                max={selectedPass.name === 'Family' ? 5 : selectedPass.max_people}
+                                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
+                                value={pass.people_count}
+                                onChange={(e) => updatePass(index, 'people_count', parseInt(e.target.value) || 1)}
+                              />
+                            )}
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1">
+                              <span className="text-purple-500">🔢</span>
+                              Max People
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all"
+                              value={pass.max_people || (selectedPass.name === 'Family' ? 5 : selectedPass.max_people)}
+                              onChange={(e) => updatePass(index, 'max_people', parseInt(e.target.value) || 1)}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-3">Actions</label>
+                            <div className="flex flex-col gap-2">
+                              <button
+                                type="button"
+                                onClick={addPass}
+                                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all shadow-md flex items-center justify-center gap-2"
+                              >
+                                <span>➕</span> Add Pass
+                              </button>
+                              {formData.passes.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removePass(index)}
+                                  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl hover:from-red-600 hover:to-red-700 transition-all shadow-md flex items-center justify-center gap-2"
+                                >
+                                  <span>❌</span> Remove
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Action</label>
-                        <div className="flex space-x-2">
-                          <button
-                            type="button"
-                            onClick={addPass}
-                            className="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600"
-                          >
-                            + Add
-                          </button>
-                          {formData.passes.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removePass(index)}
-                              className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600"
-                            >
-                              Remove
-                            </button>
-                          )}
+                      
+                      {/* Individual Pass Details */}
+                      <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-xl border border-amber-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                          <span className="text-amber-600">📝</span>
+                          Pass #{index + 1} - Holder Details (Optional)
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-2">Holder Name</label>
+                            <input
+                              type="text"
+                              className="w-full p-4 border-2 border-amber-200 rounded-xl bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all"
+                              placeholder="Enter holder name (optional)"
+                              value={pass.buyer_details.name}
+                              onChange={(e) => updatePass(index, 'name', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-2">Holder Phone</label>
+                            <input
+                              type="tel"
+                              className="w-full p-4 border-2 border-amber-200 rounded-xl bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all"
+                              placeholder="Enter phone number (optional)"
+                              value={pass.buyer_details.phone}
+                              onChange={(e) => updatePass(index, 'phone', e.target.value)}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
                 
-                {/* Pass Details Section */}
-                {showPassDetails && (
-                  <div className="mt-6">
-                    <h4 className="text-lg font-bold text-gray-700 mb-4">Individual Pass Details (Optional)</h4>
-                    <div className="space-y-4">
-                      {formData.passes.map((pass, index) => (
-                        <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Pass #{index + 1} - Holder Name</label>
-                            <input
-                              type="text"
-                              className="w-full p-3 border-2 border-gray-300 rounded-lg"
-                              placeholder="Optional"
-                              value={pass.buyer_details.name}
-                              onChange={(e) => updatePass(index, 'name', e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Pass Holder Phone</label>
-                            <input
-                              type="tel"
-                              className="w-full p-3 border-2 border-gray-300 rounded-lg"
-                              placeholder="Optional"
-                              value={pass.buyer_details.phone}
-                              onChange={(e) => updatePass(index, 'phone', e.target.value)}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
-                <div className="mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowPassDetails(!showPassDetails)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    {showPassDetails ? 'Hide Details' : 'Show Details'}
-                  </button>
-                </div>
+
+
 
                 {/* Summary */}
                 <div className="mt-6 bg-blue-50 p-4 rounded-lg">

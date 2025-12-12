@@ -142,9 +142,20 @@ const Dashboard = () => {
   return (
     <div className="p-3 sm:p-6 bg-gray-50 min-h-screen">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2 text-base sm:text-lg">Welcome back, {user?.name || 'Admin'}</p>
-        <p className="text-xs sm:text-sm text-gray-500">New Year 2025 Event Management</p>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-2 text-base sm:text-lg">Welcome back, {user?.name || 'Admin'}</p>
+            <p className="text-xs sm:text-sm text-gray-500">New Year 2025 Event Management</p>
+          </div>
+          <button
+            onClick={downloadReport}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          >
+            <span>📊</span>
+            Download Report
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
@@ -176,8 +187,8 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <h3 className="text-xl font-semibold text-gray-900 mb-6">Pass Type Analytics</h3>
           <div className="space-y-4">
             {stats.passTypes && stats.passTypes.length > 0 ? (
@@ -222,7 +233,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        {/* <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <h3 className="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h3>
           <div className="space-y-4">
             <button
@@ -256,7 +267,7 @@ const Dashboard = () => {
               <span className="mr-2">📊</span>Download Report
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">

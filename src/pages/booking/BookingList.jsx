@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import Button from '../../components/Button';
 import SellPass from '../sales/SellPass';
@@ -6,6 +7,7 @@ import SellPass from '../sales/SellPass';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const BookingList = () => {
+  const navigate = useNavigate();
   const { user } = useAppContext();
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
@@ -243,7 +245,7 @@ const BookingList = () => {
             >
               📊 Download Excel
             </Button>
-            <Button onClick={() => setShowSellPass(true)} variant="primary" className="w-full sm:w-auto">
+            <Button onClick={() => navigate('/sell-pass')} variant="primary" className="w-full sm:w-auto">
               <span className="mr-2">+</span>
               Create Booking
             </Button>
