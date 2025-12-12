@@ -149,8 +149,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         }
         if (onClose) {
           onClose();
-        } else if (!editData) {
-          navigate('/sell-pass-list');
+        } else {
+          navigate('/bookings');
         }
       } else {
         const errorData = await response.json();
