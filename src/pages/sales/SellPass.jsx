@@ -15,12 +15,14 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
     payment_status: 'Paid',
     custom_price: '',
     upi_id: '',
-    transaction_id: ''
+    transaction_id: '',
+    payment_screenshot: null
   });
   const [showPassDetails, setShowPassDetails] = useState(false);
   const [showCreatePassType, setShowCreatePassType] = useState(false);
   const [newPassType, setNewPassType] = useState({ name: 'Teens', price: '', max_people: '', description: '' });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     loadPassTypes();
@@ -56,7 +58,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         payment_status: editData.payment_status || 'Paid',
         custom_price: editData.total_amount ? editData.total_amount.toString() : '',
         upi_id: '',
-        transaction_id: ''
+        transaction_id: '',
+        payment_screenshot: null
       };
       
       console.log('Setting edit form data:', editFormData);
@@ -129,11 +132,51 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
     setFormData({ ...formData, passes: newPasses });
   };
 
+  const uploadToBackend = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/api/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+    
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.message || 'Upload failed');
+    }
+    
+    return result.url;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      let paymentScreenshotUrl = null;
+      
+      console.log('Payment screenshot file:', formData.payment_screenshot);
+      
+      if (formData.payment_screenshot) {
+        console.log('Starting image upload...');
+        setUploading(true);
+        try {
+          paymentScreenshotUrl = await uploadToBackend(formData.payment_screenshot);
+          console.log('Upload successful:', paymentScreenshotUrl);
+        } catch (error) {
+          console.error('Upload failed:', error);
+          alert('Image upload failed: ' + error.message);
+        }
+        setUploading(false);
+      } else {
+        console.log('No image selected for upload');
+      }
       const selectedPass = passTypes.find(p => p._id === formData.pass_type_id);
       const totalPeople = formData.passes.reduce((sum, pass) => sum + pass.people_count, 0);
       const totalPrice = selectedPass.price * formData.passes.length;
@@ -165,7 +208,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         pass_holders: passHolders,
         payment_mode: formData.payment_mode,
         mark_as_paid: formData.payment_status === 'Paid',
-        notes: `${formData.passes.length} pass${formData.passes.length > 1 ? 'es' : ''} booked. ${buildPaymentNotes()}`
+        notes: `${formData.passes.length} pass${formData.passes.length > 1 ? 'es' : ''} booked. ${buildPaymentNotes()}`,
+        payment_screenshot: paymentScreenshotUrl
       };
       
       console.log('Sending booking data with total_amount:', saleData.total_amount);
@@ -230,9 +274,11 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       payment_status: 'Paid',
       custom_price: '',
       upi_id: '',
-      transaction_id: ''
+      transaction_id: '',
+      payment_screenshot: null
     });
     setShowPassDetails(false);
+    setUploading(false);
   };
 
   const selectedPass = passTypes.find(p => p._id === formData.pass_type_id);
@@ -611,7 +657,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                 <span className="text-green-600">✅</span>
                 Payment Status
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
                 {['Paid', 'Pending'].map((status) => (
                   <label key={status} className="flex items-center space-x-3 cursor-pointer p-3 border-2 border-gray-200 rounded-lg hover:border-green-300 transition-colors">
                     <input
@@ -627,6 +673,20 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                     }`}>{status}</span>
                   </label>
                 ))}
+              </div>
+              
+              {/* Payment Screenshot Upload */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Screenshot (Optional)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFormData({...formData, payment_screenshot: e.target.files[0]})}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                />
+                {formData.payment_screenshot && (
+                  <p className="text-sm text-green-600 mt-1">📷 {formData.payment_screenshot.name}</p>
+                )}
               </div>
             </div>
 
@@ -684,13 +744,13 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
             <div className="pt-4 sm:pt-6">
               <button
                 type="submit"
-                disabled={loading || !formData.pass_type_id || !formData.buyer_name || !formData.buyer_phone}
+                disabled={loading || uploading || !formData.pass_type_id || !formData.buyer_name || !formData.buyer_phone}
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 sm:py-5 px-6 sm:px-8 rounded-xl font-bold text-lg sm:text-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-3"
               >
-                {loading ? (
+                {loading || uploading ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Processing...
+                    {uploading ? 'Uploading Image...' : 'Processing...'}
                   </>
                 ) : (
                   <>
