@@ -476,19 +476,20 @@ const BookingList = () => {
                             <div>
                               <div className="space-y-1">
                                 {booking.passes.map((pass, idx) => (
-                                  <div key={idx}>
-                                    {getPassTypeBadge(pass.pass_type_name || pass.pass_type_id?.name || 'Pass')}
+                                  <div key={idx} className="flex items-center justify-between">
+                                    {getPassTypeBadge(pass.pass_type_name || 'Pass')}
+                                    <span className="text-xs text-green-600 font-semibold ml-2">₹{pass.pass_type_price}</span>
                                   </div>
                                 ))}
                               </div>
-                              <div className="text-xs text-gray-500 mt-1">
-                                ₹{booking.passes.reduce((sum, p) => sum + (p.pass_type_price || p.pass_type_id?.price || 0), 0)}
+                              <div className="text-xs text-gray-500 mt-1 font-bold">
+                                Total: ₹{booking.total_amount || booking.passes.reduce((sum, p) => sum + (p.pass_type_price || 0), 0)}
                               </div>
                             </div>
                           ) : (
                             <div>
                               {getPassTypeBadge(booking.pass_type_id?.name || 'Unknown')}
-                              <div className="text-xs text-gray-500 mt-1">₹{booking.pass_type_id?.price || 0}</div>
+                              <div className="text-xs text-green-600 font-semibold mt-1">₹{booking.total_amount || booking.pass_type_id?.price || 0}</div>
                             </div>
                           )}
                         </td>

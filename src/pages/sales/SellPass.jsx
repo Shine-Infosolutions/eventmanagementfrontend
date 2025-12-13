@@ -54,7 +54,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         }],
         payment_mode: editData.payment_mode || 'Cash',
         payment_status: editData.payment_status || 'Paid',
-        custom_price: '',
+        custom_price: editData.total_amount ? editData.total_amount.toString() : '',
         upi_id: '',
         transaction_id: ''
       };
@@ -140,26 +140,6 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       
       const token = localStorage.getItem('token');
       
-      // Format passes data for new structure
-      const passes = formData.passes.map((pass, passIndex) => {
-        const passHolders = [];
-        for (let i = 0; i < pass.people_count; i++) {
-          const personData = {
-            name: pass.buyer_details[`person_${i}_name`] || '',
-            phone: pass.buyer_details[`person_${i}_phone`] || ''
-          };
-          if (personData.name) {
-            passHolders.push(personData);
-          }
-        }
-        
-        return {
-          pass_type_id: formData.pass_type_id,
-          people_count: pass.people_count,
-          pass_holders: passHolders
-        };
-      });
-
       // Format pass holders data
       const passHolders = [];
       formData.passes.forEach((pass, passIndex) => {
@@ -180,13 +160,15 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         buyer_name: formData.buyer_name,
         buyer_phone: formData.buyer_phone,
         total_people: totalPeople,
+        total_passes: formData.passes.length,
+        total_amount: totalPrice,
         pass_holders: passHolders,
         payment_mode: formData.payment_mode,
         mark_as_paid: formData.payment_status === 'Paid',
         notes: `${formData.passes.length} pass${formData.passes.length > 1 ? 'es' : ''} booked. ${buildPaymentNotes()}`
       };
       
-      console.log('Sending booking data:', saleData);
+      console.log('Sending booking data with total_amount:', saleData.total_amount);
       
       const response = await fetch(`${API_URL}/api/bookings`, {
         method: 'POST',

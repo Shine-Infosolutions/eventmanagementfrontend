@@ -29,7 +29,7 @@ const Dashboard = () => {
         booking.buyer_name,
         booking.buyer_phone,
         booking.pass_type_id?.name || 'N/A',
-        booking.pass_type_id?.price || 0,
+        booking.total_amount || booking.pass_type_id?.price || 0,
         booking.payment_status,
         booking.checked_in ? 'Checked In' : 'Pending',
         booking.people_entered || 0,
@@ -66,8 +66,8 @@ const Dashboard = () => {
         // Calculate revenue from all bookings
         const paidBookings = bookings.filter(b => b.payment_status === 'Paid');
         const totalRevenue = bookings.reduce((sum, b) => {
-          const price = typeof b.pass_type_id === 'object' ? b.pass_type_id.price : passTypes.find(pt => pt._id === b.pass_type_id)?.price || 0;
-          return sum + price;
+          const amount = b.total_amount || (typeof b.pass_type_id === 'object' ? b.pass_type_id.price : passTypes.find(pt => pt._id === b.pass_type_id)?.price || 0);
+          return sum + amount;
         }, 0);
         
         // Calculate check-in stats
@@ -101,7 +101,7 @@ const Dashboard = () => {
           checkedIn: checkedInBookings.length,
           pending: pendingEntry,
           totalPeopleEntered,
-          recentBookings: bookings.slice(-5).reverse()
+          recentBookings: bookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5)
         });
       }
     } catch (error) {
@@ -271,78 +271,102 @@ const Dashboard = () => {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-6">Recent Bookings</h3>
-        
-        {/* Mobile Card View */}
-        <div className="block sm:hidden space-y-3">
-          {stats.recentBookings.map((booking) => (
-            <div key={booking._id} className="border border-gray-200 rounded-lg p-3">
-              <div className="flex justify-between items-start mb-2">
-                <div className="font-mono text-sm text-gray-900">{booking.booking_id}</div>
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  booking.checked_in 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {booking.checked_in ? 'Checked In' : 'Pending'}
-                </span>
-              </div>
-              <div className="mb-2">
-                <div className="font-medium text-gray-900">{booking.buyer_name}</div>
-                <div className="text-sm text-gray-500">{booking.buyer_phone}</div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                  {booking.pass_type_id?.name}
-                </span>
-                <span className="font-semibold text-gray-900">₹{booking.pass_type_id?.price}</span>
-              </div>
-            </div>
-          ))}
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-semibold text-gray-900">Recent Bookings</h3>
+          <button
+            onClick={() => navigate('/bookings')}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            View All →
+          </button>
         </div>
-
-        {/* Desktop Table View */}
-        <div className="hidden sm:block overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Booking ID</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Customer</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Pass Type</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Status</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
+        
+        {stats.recentBookings && stats.recentBookings.length > 0 ? (
+          <>
+            {/* Mobile Card View */}
+            <div className="block sm:hidden space-y-3">
               {stats.recentBookings.map((booking) => (
-                <tr key={booking._id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-3 px-4 font-mono text-sm">{booking.booking_id}</td>
-                  <td className="py-3 px-4">
-                    <div>
-                      <div className="font-medium">{booking.buyer_name}</div>
-                      <div className="text-sm text-gray-500">{booking.buyer_phone}</div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                      {booking.pass_type_id?.name}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-sm ${
+                <div key={booking._id} className="border border-gray-200 rounded-lg p-3">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="font-mono text-sm text-gray-900">{booking.booking_id || `NY2025-${booking._id?.slice(-6)}`}</div>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
                       booking.checked_in 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-yellow-100 text-yellow-800'
                     }`}>
                       {booking.checked_in ? 'Checked In' : 'Pending'}
                     </span>
-                  </td>
-                  <td className="py-3 px-4 font-semibold">₹{booking.pass_type_id?.price}</td>
-                </tr>
+                  </div>
+                  <div className="mb-2">
+                    <div className="font-medium text-gray-900">{booking.buyer_name || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">{booking.buyer_phone || 'N/A'}</div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                      {booking.pass_type_id?.name || 'Unknown'}
+                    </span>
+                    <span className="font-semibold text-gray-900">₹{booking.total_amount || booking.pass_type_id?.price || 0}</span>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-500">Booking ID</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-500">Customer</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-500">Pass Type</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-500">Status</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-500">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recentBookings.map((booking) => (
+                    <tr key={booking._id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 font-mono text-sm">{booking.booking_id || `NY2025-${booking._id?.slice(-6)}`}</td>
+                      <td className="py-3 px-4">
+                        <div>
+                          <div className="font-medium">{booking.buyer_name || 'N/A'}</div>
+                          <div className="text-sm text-gray-500">{booking.buyer_phone || 'N/A'}</div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                          {booking.pass_type_id?.name || 'Unknown'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 rounded-full text-sm ${
+                          booking.checked_in 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {booking.checked_in ? 'Checked In' : 'Pending'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-semibold">₹{booking.total_amount || booking.pass_type_id?.price || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-gray-400 text-4xl mb-4">📋</div>
+            <h4 className="text-lg font-medium text-gray-900 mb-2">No Recent Bookings</h4>
+            <p className="text-gray-600 mb-4">Start selling passes to see recent bookings here</p>
+            <button 
+              onClick={() => navigate('/sell-pass')}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Create First Booking
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

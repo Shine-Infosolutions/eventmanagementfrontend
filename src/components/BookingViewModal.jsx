@@ -4,20 +4,20 @@ const BookingViewModal = ({ booking, onClose }) => {
   if (!booking) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-900">Booking Details</h2>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="flex justify-between items-center p-3 sm:p-6 border-b">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Booking Details</h2>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl font-light"
+            className="text-gray-400 hover:text-gray-600 text-xl sm:text-2xl font-light p-1"
           >
             ×
           </button>
         </div>
         
-        <div className="p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="p-3 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">Pass ID</label>
               <p className="text-lg font-mono text-gray-900">{booking.booking_id}</p>
@@ -39,9 +39,9 @@ const BookingViewModal = ({ booking, onClose }) => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Amount</label>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Total Amount</label>
               <p className="text-lg font-semibold text-green-600">
-                ₹{booking.pass_type_id?.price || 0}
+                ₹{booking.total_amount || booking.pass_type_id?.price || 0}
               </p>
             </div>
             
@@ -97,9 +97,9 @@ const BookingViewModal = ({ booking, onClose }) => {
           </div>
           
           {booking.pass_holders && booking.pass_holders.length > 0 && (
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-500 mb-3">Pass Holder Details</label>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <div className="mt-4 sm:mt-6">
+              <label className="block text-sm font-medium text-gray-500 mb-2 sm:mb-3">Pass Holder Details</label>
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3">
                 {booking.pass_holders.map((holder, index) => (
                   holder.name && (
                     <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
@@ -118,18 +118,18 @@ const BookingViewModal = ({ booking, onClose }) => {
           )}
           
           {booking.notes && (
-            <div className="mt-6">
+            <div className="mt-4 sm:mt-6">
               <label className="block text-sm font-medium text-gray-500 mb-2">Notes</label>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-gray-700">{booking.notes}</p>
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                <p className="text-gray-700 text-sm sm:text-base">{booking.notes}</p>
               </div>
             </div>
           )}
           
-          <div className="mt-8 flex justify-center">
+          <div className="mt-6 sm:mt-8 flex justify-center">
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="px-4 sm:px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
             >
               Close
             </button>

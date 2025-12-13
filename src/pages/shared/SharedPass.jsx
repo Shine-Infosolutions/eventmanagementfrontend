@@ -40,7 +40,7 @@ const SharedPass = () => {
           customerPhone: booking.buyer_phone,
           passType: booking.pass_type_id?.name,
           maxPeople: booking.total_people,
-          price: booking.pass_type_id?.price,
+          price: booking.total_amount || booking.pass_type_id?.price,
           paymentStatus: booking.payment_status,
           paymentMode: booking.payment_mode,
           createdAt: booking.createdAt,
@@ -98,10 +98,10 @@ const SharedPass = () => {
     <>
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Print Button */}
-      <div className="no-print p-4 flex justify-end gap-3">
+      <div className="no-print p-2 sm:p-4 flex justify-end gap-2 sm:gap-3">
         <button 
           onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 shadow-md transition-colors"
+          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 shadow-md transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -110,50 +110,50 @@ const SharedPass = () => {
         </button>
       </div>
 
-      <div className="print-content max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="print-content max-w-4xl mx-auto p-2 sm:p-4 lg:p-6 xl:p-8">
         {/* Pass Container */}
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
           
           {/* Pass Header */}
-          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white p-6 sm:p-8">
-            <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white p-3 sm:p-6 lg:p-8">
+            <div className="flex flex-col lg:flex-row justify-between items-center gap-3 sm:gap-6">
               <div className="text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
                   <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                     <span className="text-2xl">🎉</span>
                   </div>
                   <div>
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-wide">EVENT PASS</h1>
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-wide">EVENT PASS</h1>
                     <div className="w-16 h-1 bg-yellow-400 rounded-full mt-1"></div>
                   </div>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-semibold mb-2">{passData.eventName}</h2>
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2">{passData.eventName}</h2>
                 <div className="flex items-center justify-center lg:justify-start gap-2 text-blue-100">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-sm">December 31, 2024 - January 1, 2025</span>
+                  <span className="text-sm">Event Bookings Date</span>
                 </div>
               </div>
               
-              <div className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white/20 rounded-full flex items-center justify-center text-3xl sm:text-4xl mb-3 border-2 border-white/30">
+              <div className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-xl p-2 sm:p-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-white/20 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 border-2 border-white/30">
                   🎫
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-blue-200 uppercase tracking-wide font-medium">Pass ID</p>
-                  <p className="text-lg sm:text-xl font-bold font-mono bg-white/20 px-3 py-1 rounded-lg mt-1">{passData.passId}</p>
+                  <p className="text-sm sm:text-lg lg:text-xl font-bold font-mono bg-white/20 px-2 sm:px-3 py-1 rounded-lg mt-1">{passData.passId}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Pass Body */}
-          <div className="p-6 sm:p-8">
+          <div className="p-3 sm:p-6 lg:p-8">
             
             {/* Pass Holder Info */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              <div className="bg-gray-50 rounded-xl p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
+              <div className="bg-gray-50 rounded-xl p-3 sm:p-4 lg:p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                     <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
@@ -182,7 +182,7 @@ const SharedPass = () => {
                 </div>
               </div>
               
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 sm:p-4 lg:p-6 border border-green-200">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                     <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -198,7 +198,7 @@ const SharedPass = () => {
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-green-200">
                     <span className="text-gray-600 font-medium">Amount</span>
-                    <span className="font-bold text-green-600 text-xl">₹{passData.price}</span>
+                    <span className="font-bold text-green-600 text-lg sm:text-xl">₹{passData.price}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-green-200">
                     <span className="text-gray-600 font-medium">Payment Mode</span>
@@ -234,7 +234,7 @@ const SharedPass = () => {
             </div>
 
             {/* Important Information */}
-            <div className="mt-8 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-6 border border-amber-200">
+            <div className="mt-6 sm:mt-8 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-3 sm:p-4 lg:p-6 border border-amber-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
                   <svg className="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
@@ -271,10 +271,10 @@ const SharedPass = () => {
         </div>
 
           {/* Pass Footer */}
-          <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-6 sm:p-8 text-center">
+          <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-3 sm:p-6 lg:p-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
               <span className="text-2xl">🎊</span>
-              <h3 className="text-xl sm:text-2xl font-bold">Welcome to {passData.eventName}!</h3>
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold">Welcome to {passData.eventName}!</h3>
               <span className="text-2xl">🎊</span>
             </div>
             
