@@ -263,16 +263,9 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 sm:p-6 lg:p-8 rounded-b-2xl shadow-xl mx-2 sm:mx-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 sm:p-3 bg-white/20 rounded-xl">
-              <span className="text-xl sm:text-2xl">🎫</span>
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Event Pass Sales</h1>
-              <p className="text-blue-100 text-xs sm:text-sm lg:text-base">New Year 2025 Celebration</p>
-            </div>
-          </div>
+        <div className="p-6 text-center">
+          <h1 className="text-2xl font-bold text-gray-900">Event Pass Sales</h1>
+          <p className="text-gray-600">New Year 2025 Celebration</p>
         </div>
 
         <div className="bg-white m-2 sm:m-4 lg:m-6 rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-8">

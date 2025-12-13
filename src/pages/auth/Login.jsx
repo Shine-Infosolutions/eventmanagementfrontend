@@ -89,7 +89,7 @@ export default function Login() {
               type="password"
               required
               className="appearance-none rounded-md relative block w-full px-3 py-3 sm:py-2 border border-gray-300 placeholder-gray-500 text-gray-900 text-base focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Password (try: admin@123)"
+              placeholder="Password (try: 123456)"
               value={formData.password}
               onChange={(e) => setFormData({...formData, password: e.target.value})}
             />

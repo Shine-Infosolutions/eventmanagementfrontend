@@ -4,6 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import Button from '../../components/Button';
 import SellPass from '../sales/SellPass';
 import BookingForm from './BookingForm';
+import BookingViewModal from '../../components/BookingViewModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -569,167 +570,22 @@ const BookingList = () => {
         </div>
       )}
       
-      {/* View Booking Modal */}
-      {viewingBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-4">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg sm:text-xl font-bold">Booking Details</h2>
-              <button 
-                onClick={() => setViewingBooking(null)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
-              >
-                X
-              </button>
-            </div>
-            <div className="p-4 sm:p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Pass ID</label>
-                  <p className="text-lg font-mono">{viewingBooking.booking_id}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Customer Name</label>
-                  <p className="text-lg">{viewingBooking.buyer_name}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Phone Number</label>
-                  <p className="text-lg">{viewingBooking.buyer_phone}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Pass Type(s)</label>
-                  {viewingBooking.passes && viewingBooking.passes.length > 0 ? (
-                    <div>
-                      <p className="text-lg">{viewingBooking.passes.length} Pass{viewingBooking.passes.length > 1 ? 'es' : ''}</p>
-                      <div className="text-sm text-gray-600">
-                        {viewingBooking.passes.map((pass, idx) => (
-                          <div key={idx}>{pass.pass_type_name} (x{pass.people_count})</div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-lg">{viewingBooking.pass_type_id?.name}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Amount</label>
-                  <p className="text-lg font-semibold text-green-600">
-                    ₹{viewingBooking.passes 
-                      ? viewingBooking.passes.reduce((sum, p) => sum + p.pass_type_price, 0)
-                      : viewingBooking.pass_type_id?.price}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Payment Status</label>
-                  <span className={`px-2 py-1 rounded-full text-sm ${
-                    viewingBooking.payment_status === 'Paid' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {viewingBooking.payment_status}
-                  </span>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Payment Mode</label>
-                  <p className="text-lg">{viewingBooking.payment_mode}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">People</label>
-                  <p className="text-lg">{viewingBooking.total_people_entered || viewingBooking.people_entered || 0}/{viewingBooking.total_people}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Check-in Status</label>
-                  <span className={`px-2 py-1 rounded-full text-sm ${
-                    viewingBooking.checked_in 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {viewingBooking.checked_in ? 'Checked In' : 'Pending Entry'}
-                  </span>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Created Date</label>
-                  <p className="text-lg">{new Date(viewingBooking.createdAt).toLocaleDateString()}</p>
-                </div>
-              </div>
-              
-              {/* Pass Holder Details */}
-              {viewingBooking.passes && viewingBooking.passes.length > 0 ? (
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-500">Pass Holder Details</label>
-                  <div className="bg-gray-50 p-3 rounded space-y-3">
-                    {viewingBooking.passes.map((pass, passIndex) => (
-                      <div key={passIndex} className="border-b pb-2 last:border-b-0">
-                        <div className="font-medium text-sm text-gray-700 mb-1">
-                          Pass {passIndex + 1}: {pass.pass_type_name} ({pass.people_count} people)
-                        </div>
-                        {pass.pass_holders && pass.pass_holders.length > 0 ? (
-                          <div className="space-y-1">
-                            {pass.pass_holders.map((holder, holderIndex) => (
-                              holder.name && (
-                                <div key={holderIndex} className="text-sm text-gray-600">
-                                  <strong>Person {holderIndex + 1}:</strong> {holder.name}
-                                  {holder.phone && ` | ${holder.phone}`}
-                                </div>
-                              )
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-sm text-gray-500">No holder details provided</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                viewingBooking.pass_holders && viewingBooking.pass_holders.length > 0 && (
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-500">Pass Holder Details</label>
-                    <div className="bg-gray-50 p-3 rounded space-y-2">
-                      {viewingBooking.pass_holders.map((holder, index) => (
-                        holder.name && (
-                          <div key={index} className="text-sm">
-                            <strong>Person {index + 1}:</strong> {holder.name}
-                            {holder.phone && ` | ${holder.phone}`}
-                          </div>
-                        )
-                      ))}
-                    </div>
-                  </div>
-                )
-              )}
-              
-              {viewingBooking.notes && (
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-500">Notes</label>
-                  <p className="text-sm bg-gray-50 p-3 rounded">{viewingBooking.notes}</p>
-                </div>
-              )}
-              
-              <div className="mt-6 text-center">
-                <button
-                  onClick={() => setViewingBooking(null)}
-                  className="bg-gray-600 text-white px-6 py-2 rounded hover:bg-gray-700"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <BookingViewModal 
+        booking={viewingBooking} 
+        onClose={() => setViewingBooking(null)} 
+      />
       
       {/* Edit Booking Modal */}
       {editingBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-4">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg sm:text-xl font-bold">Edit Booking</h2>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-bold text-gray-900">Edit Booking</h2>
               <button 
                 onClick={() => setEditingBooking(null)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
+                className="text-gray-400 hover:text-gray-600 text-2xl font-light"
               >
-                X
+                ×
               </button>
             </div>
             <SellPass 
