@@ -553,18 +553,18 @@ const BookingList = () => {
       </div>
       
       {showSellPass && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50">
-          <div className="h-full w-full bg-white sm:rounded-lg sm:max-w-4xl sm:mx-auto sm:my-4 sm:max-h-[95vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-xl">
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
-              <h2 className="text-lg sm:text-xl font-bold">Create New Booking</h2>
+              <h2 className="text-lg font-bold">Create New Booking</h2>
               <button 
                 onClick={() => setShowSellPass(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl p-2 touch-manipulation"
+                className="text-gray-500 hover:text-gray-700 text-xl p-1"
               >
                 ✕
               </button>
             </div>
-            <div className="h-full overflow-y-auto pb-20">
+            <div className="overflow-y-auto">
               <SellPass onClose={() => setShowSellPass(false)} onBookingCreated={loadBookings} />
             </div>
           </div>
@@ -579,12 +579,12 @@ const BookingList = () => {
       {/* Edit Booking Modal */}
       {editingBooking && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-bold text-gray-900">Edit Booking</h2>
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-xl">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-lg font-bold text-gray-900">Edit Booking</h2>
               <button 
                 onClick={() => setEditingBooking(null)}
-                className="text-gray-400 hover:text-gray-600 text-2xl font-light"
+                className="text-gray-400 hover:text-gray-600 text-xl font-light"
               >
                 ×
               </button>

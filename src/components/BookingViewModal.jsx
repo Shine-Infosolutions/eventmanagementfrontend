@@ -4,8 +4,8 @@ const BookingViewModal = ({ booking, onClose }) => {
   if (!booking) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-xl">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-start justify-center p-2 overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-2xl w-full my-4 shadow-xl">
         <div className="flex justify-between items-center p-3 sm:p-6 border-b">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900">Booking Details</h2>
           <button 
@@ -17,98 +17,74 @@ const BookingViewModal = ({ booking, onClose }) => {
         </div>
         
         <div className="p-3 sm:p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Pass ID</label>
-              <p className="text-lg font-mono text-gray-900">{booking.booking_id}</p>
+          <div className="space-y-2 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0">
+            <div className="flex justify-between sm:block">
+              <span className="text-xs sm:text-sm text-gray-500 sm:block sm:mb-1">Pass ID{!window.innerWidth || window.innerWidth >= 640 ? ':' : ''}</span>
+              <span className="text-sm sm:text-lg font-mono sm:text-gray-900">{booking.booking_id}</span>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Customer Name</label>
-              <p className="text-lg text-gray-900">{booking.buyer_name}</p>
+            <div className="flex justify-between sm:block">
+              <span className="text-xs sm:text-sm text-gray-500 sm:block sm:mb-1">Name{!window.innerWidth || window.innerWidth >= 640 ? ':' : ''}</span>
+              <span className="text-sm sm:text-lg sm:text-gray-900">{booking.buyer_name}</span>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Phone Number</label>
-              <p className="text-lg text-gray-900">{booking.buyer_phone}</p>
+            <div className="flex justify-between sm:block">
+              <span className="text-xs sm:text-sm text-gray-500 sm:block sm:mb-1">Phone{!window.innerWidth || window.innerWidth >= 640 ? ':' : ''}</span>
+              <span className="text-sm sm:text-lg sm:text-gray-900">{booking.buyer_phone}</span>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Pass Type</label>
-              <p className="text-lg text-gray-900">{booking.pass_type_id?.name || 'Unknown'}</p>
+            <div className="flex justify-between sm:block">
+              <span className="text-xs sm:text-sm text-gray-500 sm:block sm:mb-1">Type{!window.innerWidth || window.innerWidth >= 640 ? ':' : ''}</span>
+              <span className="text-sm sm:text-lg sm:text-gray-900">{booking.pass_type_id?.name || 'Unknown'}</span>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Total Amount</label>
-              <p className="text-lg font-semibold text-green-600">
-                ₹{booking.total_amount || booking.pass_type_id?.price || 0}
-              </p>
+            <div className="flex justify-between sm:block">
+              <span className="text-xs sm:text-sm text-gray-500 sm:block sm:mb-1">Amount{!window.innerWidth || window.innerWidth >= 640 ? ':' : ''}</span>
+              <span className="text-sm sm:text-lg font-semibold text-green-600">₹{booking.total_amount || booking.pass_type_id?.price || 0}</span>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Payment Status</label>
-              <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+            <div className="flex justify-between items-center sm:block">
+              <span className="text-xs sm:text-sm text-gray-500 sm:block sm:mb-1">Payment Status{!window.innerWidth || window.innerWidth >= 640 ? ':' : ''}</span>
+              <span className={`px-2 py-1 sm:px-3 rounded text-xs sm:text-sm font-medium ${
                 booking.payment_status === 'Paid' 
                   ? 'bg-green-100 text-green-800' 
                   : booking.payment_status === 'Pending'
                   ? 'bg-yellow-100 text-yellow-800'
                   : 'bg-red-100 text-red-800'
-              }`}>
-                {booking.payment_status}
-              </span>
+              }`}>{booking.payment_status}</span>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Payment Mode</label>
-              <span className={`inline-flex px-3 py-1 rounded text-sm font-medium ${
+            <div className="flex justify-between items-center sm:block">
+              <span className="text-xs sm:text-sm text-gray-500 sm:block sm:mb-1">Payment Mode{!window.innerWidth || window.innerWidth >= 640 ? ':' : ''}</span>
+              <span className={`px-2 py-1 sm:px-3 rounded text-xs sm:text-sm font-medium ${
                 booking.payment_mode === 'Cash' ? 'bg-yellow-100 text-yellow-800' :
                 booking.payment_mode === 'UPI' ? 'bg-blue-100 text-blue-800' :
                 booking.payment_mode === 'Card' ? 'bg-green-100 text-green-800' :
                 'bg-purple-100 text-purple-800'
-              }`}>
-                {booking.payment_mode}
-              </span>
+              }`}>{booking.payment_mode}</span>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">People</label>
-              <p className="text-lg text-gray-900">
-                {booking.people_entered || 0}/{booking.total_people}
-              </p>
+            <div className="flex justify-between sm:block">
+              <span className="text-xs sm:text-sm text-gray-500 sm:block sm:mb-1">People{!window.innerWidth || window.innerWidth >= 640 ? ':' : ''}</span>
+              <span className="text-sm sm:text-lg sm:text-gray-900">{booking.people_entered || 0}/{booking.total_people}</span>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Check-in Status</label>
-              <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+            <div className="flex justify-between items-center sm:block">
+              <span className="text-xs sm:text-sm text-gray-500 sm:block sm:mb-1">Check-in Status{!window.innerWidth || window.innerWidth >= 640 ? ':' : ''}</span>
+              <span className={`px-2 py-1 sm:px-3 rounded text-xs sm:text-sm font-medium ${
                 booking.checked_in 
                   ? 'bg-green-100 text-green-800' 
                   : 'bg-yellow-100 text-yellow-800'
-              }`}>
-                {booking.checked_in ? 'Checked In' : 'Pending Entry'}
-              </span>
+              }`}>{booking.checked_in ? 'Checked In' : 'Pending Entry'}</span>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Created Date</label>
-              <p className="text-lg text-gray-900">
-                {new Date(booking.createdAt).toLocaleDateString()}
-              </p>
+            <div className="flex justify-between sm:block">
+              <span className="text-xs sm:text-sm text-gray-500 sm:block sm:mb-1">Date{!window.innerWidth || window.innerWidth >= 640 ? ':' : ''}</span>
+              <span className="text-sm sm:text-lg sm:text-gray-900">{new Date(booking.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
           
           {booking.pass_holders && booking.pass_holders.length > 0 && (
-            <div className="mt-4 sm:mt-6">
-              <label className="block text-sm font-medium text-gray-500 mb-2 sm:mb-3">Pass Holder Details</label>
-              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3">
+            <div className="mt-3 sm:mt-4">
+              <span className="text-xs sm:text-sm font-medium text-gray-500 sm:block sm:mb-2">Pass Holders:</span>
+              <div className="bg-gray-50 rounded p-2 sm:p-3 mt-1 max-h-20 sm:max-h-32 overflow-y-auto">
                 {booking.pass_holders.map((holder, index) => (
                   holder.name && (
-                    <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-                      <div>
-                        <span className="font-medium text-gray-900">Person {index + 1}:</span>
-                        <span className="ml-2 text-gray-700">{holder.name}</span>
-                      </div>
+                    <div key={index} className="text-xs sm:text-sm py-1 sm:flex sm:justify-between sm:items-center sm:py-2 sm:border-b sm:border-gray-200 sm:last:border-b-0">
+                      <span className="sm:font-medium sm:text-gray-900">{index + 1}. {holder.name}</span>
                       {holder.phone && (
-                        <span className="text-sm text-gray-500">{holder.phone}</span>
+                        <span className="sm:text-gray-500 sm:text-sm"> ({holder.phone})</span>
                       )}
                     </div>
                   )
@@ -118,22 +94,22 @@ const BookingViewModal = ({ booking, onClose }) => {
           )}
           
           {booking.notes && (
-            <div className="mt-4 sm:mt-6">
-              <label className="block text-sm font-medium text-gray-500 mb-2">Notes</label>
-              <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                <p className="text-gray-700 text-sm sm:text-base">{booking.notes}</p>
+            <div className="mt-3 sm:mt-4">
+              <span className="text-xs sm:text-sm font-medium text-gray-500 sm:block sm:mb-2">Notes:</span>
+              <div className="bg-gray-50 rounded p-2 sm:p-3 mt-1 max-h-16 sm:max-h-20 overflow-y-auto">
+                <p className="text-xs sm:text-sm text-gray-700">{booking.notes}</p>
               </div>
             </div>
           )}
           
-          <div className="mt-6 sm:mt-8 flex justify-center">
+          {/* <div className="mt-3 sm:mt-4 flex justify-center">
             <button
               onClick={onClose}
-              className="px-4 sm:px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
+              className="px-4 sm:px-6 py-2 bg-gray-600 text-white rounded text-sm sm:text-base hover:bg-gray-700 transition-colors"
             >
               Close
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
