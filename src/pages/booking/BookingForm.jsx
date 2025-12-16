@@ -5,7 +5,7 @@ import Modal from '../../components/Modal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
+const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
   const { addBooking } = useAppContext();
   const [passTypes, setPassTypes] = useState([]);
   const [formData, setFormData] = useState({
@@ -27,26 +27,14 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
   }, [isOpen]);
 
   useEffect(() => {
-    if (editData && passTypes.length > 0) {
-      console.log('Setting edit data:', editData);
-      setFormData({
-        pass_type_id: editData.pass_type_id?._id || editData.pass_type_id,
-        buyer_name: editData.buyer_name || '',
-        buyer_phone: editData.buyer_phone || '',
-        payment_mode: editData.payment_mode || 'Cash',
-        upi_id: '',
-        transaction_id: '',
-        notes: editData.notes || '',
-        pass_holders: editData.pass_holders || Array(5).fill({ name: '', phone: '' })
-      });
-    } else if (!editData && passTypes.length > 0) {
+    if (passTypes.length > 0) {
       setFormData(prev => ({
         ...prev,
         pass_type_id: passTypes[0]._id,
         pass_holders: Array(5).fill({ name: '', phone: '' })
       }));
     }
-  }, [editData, passTypes]);
+  }, [passTypes]);
 
   const loadPassTypes = async () => {
     try {
@@ -84,11 +72,9 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
       };
 
       const token = localStorage.getItem('token');
-      const url = editData ? `${API_URL}/api/bookings/${editData._id}` : `${API_URL}/api/bookings`;
-      const method = editData ? 'PUT' : 'POST';
       
-      const response = await fetch(url, {
-        method,
+      const response = await fetch(`${API_URL}/api/bookings`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -96,11 +82,11 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
         body: JSON.stringify(bookingData)
       });
 
-      if (!response.ok) throw new Error(`Failed to ${editData ? 'update' : 'create'} booking`);
+      if (!response.ok) throw new Error('Failed to create booking');
       
       const booking = await response.json();
       const bookingId = booking.booking_id || `NY2025-${booking._id?.slice(-6) || 'XXXXXX'}`;
-      alert(`Booking ${editData ? 'updated' : 'created'} successfully!\nBooking ID: ${bookingId}`);
+      alert(`Booking created successfully!\nBooking ID: ${bookingId}`);
       setFormData({ pass_type_id: passTypes[0]?._id || '', buyer_name: '', buyer_phone: '', payment_mode: 'Cash', upi_id: '', transaction_id: '', notes: '', pass_holders: [] });
       onBookingCreated?.();
       onClose();
@@ -120,165 +106,216 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated, editData }) => {
   const selectedPassType = passTypes.find(p => p._id === formData.pass_type_id);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={editData ? "Edit Booking" : "Create New Booking"}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Pass Type</label>
-          <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={formData.pass_type_id}
-            onChange={(e) => {
-              const selectedPass = passTypes.find(p => p._id === e.target.value);
-              setFormData({
-                ...formData, 
-                pass_type_id: e.target.value,
-                pass_holders: selectedPass ? Array(5).fill({ name: '', phone: '' }) : []
-              });
-            }}
-          >
-            {passTypes.map((passType) => (
-              <option key={passType._id} value={passType._id}>{passType.name} Pass - ₹{passType.price}</option>
-            ))}
-          </select>
-        </div>
+    <Modal isOpen={isOpen} onClose={onClose} title="Create New Booking">
+      <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">🎫</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">Pass Type</h3>
+            </div>
+            <select
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
+              value={formData.pass_type_id}
+              onChange={(e) => {
+                const selectedPass = passTypes.find(p => p._id === e.target.value);
+                setFormData({
+                  ...formData, 
+                  pass_type_id: e.target.value,
+                  pass_holders: selectedPass ? Array(5).fill({ name: '', phone: '' }) : []
+                });
+              }}
+            >
+              {passTypes.map((passType) => (
+                <option key={passType._id} value={passType._id}>{passType.name} Pass - ₹{passType.price}</option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Buyer Name *</label>
-          <input
-            type="text"
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter full name"
-            value={formData.buyer_name}
-            onChange={(e) => setFormData({...formData, buyer_name: e.target.value})}
-          />
-        </div>
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">👤</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">Customer Details</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Buyer Name *</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+                  placeholder="Enter full name"
+                  value={formData.buyer_name}
+                  onChange={(e) => setFormData({...formData, buyer_name: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Mobile Number *</label>
+                <input
+                  type="tel"
+                  required
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+                  placeholder="Enter mobile number"
+                  value={formData.buyer_phone}
+                  onChange={(e) => setFormData({...formData, buyer_phone: e.target.value})}
+                />
+              </div>
+            </div>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Mobile Number *</label>
-          <input
-            type="tel"
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter mobile number"
-            value={formData.buyer_phone}
-            onChange={(e) => setFormData({...formData, buyer_phone: e.target.value})}
-          />
-        </div>
+          {selectedPassType && formData.pass_holders.length > 0 && (
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm">👥</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Pass Holder Details ({selectedPassType.max_people} {selectedPassType.max_people === 1 ? 'Person' : 'People'})
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {formData.pass_holders.map((holder, index) => (
+                  <div key={index} className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs">{index + 1}</span>
+                      Person {index + 1} {index === 0 ? '(Optional)' : ''}
+                    </h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Full Name</label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all"
+                          placeholder="Enter full name"
+                          value={holder.name}
+                          onChange={(e) => updatePassHolder(index, 'name', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Phone</label>
+                        <input
+                          type="tel"
+                          className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all"
+                          placeholder="Phone number"
+                          value={holder.phone}
+                          onChange={(e) => updatePassHolder(index, 'phone', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-        {/* Pass Holder Details Section */}
-        {selectedPassType && formData.pass_holders.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">
-              Pass Holder Details ({selectedPassType.max_people} {selectedPassType.max_people === 1 ? 'Person' : 'People'})
-            </h3>
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">💳</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">Payment Details</h3>
+            </div>
             <div className="space-y-4">
-              {formData.pass_holders.map((holder, index) => (
-                <div key={index} className="bg-white border border-gray-200 rounded-lg p-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    Person {index + 1} Details {index === 0 ? '(Optional)' : ''}
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Payment Mode</label>
+                <select
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all"
+                  value={formData.payment_mode}
+                  onChange={(e) => setFormData({...formData, payment_mode: e.target.value, upi_id: '', transaction_id: ''})}
+                >
+                  <option value="Cash">💰 Cash</option>
+                  <option value="UPI">📱 UPI</option>
+                  <option value="Card">💳 Card</option>
+                  <option value="Online">🌐 Online</option>
+                </select>
+              </div>
+
+              {formData.payment_mode === 'UPI' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">UPI ID *</label>
                       <input
                         type="text"
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="Enter full name"
-                        value={holder.name}
-                        onChange={(e) => updatePassHolder(index, 'name', e.target.value)}
+                        required
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
+                        placeholder="example@upi"
+                        value={formData.upi_id}
+                        onChange={(e) => setFormData({...formData, upi_id: e.target.value})}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Transaction ID *</label>
                       <input
-                        type="tel"
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="Phone number"
-                        value={holder.phone}
-                        onChange={(e) => updatePassHolder(index, 'phone', e.target.value)}
+                        type="text"
+                        required
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
+                        placeholder="TXN ID"
+                        value={formData.transaction_id}
+                        onChange={(e) => setFormData({...formData, transaction_id: e.target.value})}
                       />
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Payment Mode</label>
-          <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={formData.payment_mode}
-            onChange={(e) => setFormData({...formData, payment_mode: e.target.value, upi_id: '', transaction_id: ''})}
-          >
-            <option value="Cash">Cash</option>
-            <option value="UPI">UPI</option>
-            <option value="Card">Card</option>
-            <option value="Online">Online</option>
-          </select>
-        </div>
+              {(formData.payment_mode === 'Card' || formData.payment_mode === 'Online') && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Transaction ID *</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+                    placeholder="Enter transaction ID"
+                    value={formData.transaction_id}
+                    onChange={(e) => setFormData({...formData, transaction_id: e.target.value})}
+                  />
+                </div>
+              )}
 
-        {formData.payment_mode === 'UPI' && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">UPI ID *</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="example@upi"
-                  value={formData.upi_id}
-                  onChange={(e) => setFormData({...formData, upi_id: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Transaction ID *</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="TXN ID"
-                  value={formData.transaction_id}
-                  onChange={(e) => setFormData({...formData, transaction_id: e.target.value})}
-                />
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold text-gray-700">Total Amount:</span>
+                  <span className="text-2xl font-bold text-green-600">₹{passTypes.find(p => p._id === formData.pass_type_id)?.price || 0}</span>
+                </div>
               </div>
             </div>
           </div>
-        )}
 
-        {(formData.payment_mode === 'Card' || formData.payment_mode === 'Online') && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Transaction ID *</label>
-            <input
-              type="text"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter transaction ID"
-              value={formData.transaction_id}
-              onChange={(e) => setFormData({...formData, transaction_id: e.target.value})}
-            />
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    Creating...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <span>✅</span>
+                    Create Booking
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
-        )}
-
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-700">Total Amount:</span>
-            <span className="text-lg font-bold text-green-600">₹{passTypes.find(p => p._id === formData.pass_type_id)?.price || 0}</span>
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-            Cancel
-          </Button>
-          <Button type="submit" disabled={loading} className="flex-1">
-            {loading ? 'Creating...' : 'Create Booking'}
-          </Button>
-        </div>
-      </form>
+        </form>
+      </div>
     </Modal>
   );
 };

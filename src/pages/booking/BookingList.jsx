@@ -4,6 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import Button from '../../components/Button';
 import SellPass from '../sales/SellPass';
 import BookingForm from './BookingForm';
+import EditBookingForm from './EditBookingForm';
 import BookingViewModal from '../../components/BookingViewModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -579,7 +580,7 @@ const BookingList = () => {
       {/* Edit Booking Modal */}
       {editingBooking && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-xl">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-xl">
             <div className="flex justify-between items-center p-4 border-b">
               <h2 className="text-lg font-bold text-gray-900">Edit Booking</h2>
               <button 
@@ -589,10 +590,10 @@ const BookingList = () => {
                 ×
               </button>
             </div>
-            <SellPass 
+            <EditBookingForm 
+              booking={editingBooking}
               onClose={() => setEditingBooking(null)} 
-              onBookingCreated={() => { loadBookings(); setEditingBooking(null); }}
-              editData={editingBooking}
+              onBookingUpdated={() => { loadBookings(); setEditingBooking(null); }}
             />
           </div>
         </div>

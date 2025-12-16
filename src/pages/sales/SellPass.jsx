@@ -287,30 +287,30 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
   const totalPrice = currentPrice * formData.passes.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
-      <div className="container mx-auto px-4 py-6 max-w-full xl:max-w-7xl">
-        
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-600 to-slate-700 rounded-full mb-4">
-            <span className="text-2xl text-white">🎫</span>
+    <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-xl">🎫</span>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Event Pass Sales</h1>
+              <p className="text-blue-600 font-semibold">New Year 2025 Celebration</p>
+            </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Event Pass Sales</h1>
-          <p className="text-slate-600 text-lg">New Year 2025 Celebration</p>
-          <div className="w-24 h-1 bg-gradient-to-r from-indigo-600 to-slate-700 mx-auto mt-4 rounded-full"></div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          <form onSubmit={handleSubmit} className="space-y-6 p-6 md:p-8">
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             
-            {/* Pass Type Selection */}
-            <div className="bg-gradient-to-r from-indigo-50 to-slate-50 p-6 rounded-xl border border-indigo-200 shadow-sm">
-              <label className="block text-lg font-semibold text-slate-800 mb-4 flex items-center gap-3">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+            <div className="border-b border-gray-200 pb-6 mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                   <span className="text-white text-sm">🎫</span>
                 </div>
-                Select Pass Type
-              </label>
+                <h3 className="text-lg font-semibold text-gray-800">Select Pass Type</h3>
+              </div>
               <select
                 className="w-full p-4 border-2 border-slate-200 rounded-xl text-base bg-white shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 appearance-none cursor-pointer"
                 value={formData.pass_type_id}
@@ -331,137 +331,10 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                   </option>
                 ))}
               </select>
-              
-              {passTypes.length === 0 && (
-                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm">⚠️</span>
-                    </div>
-                    <p className="text-sm text-red-600 font-medium">No pass types available.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreatePassType(true)}
-                    className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-                  >
-                    + Create Pass Type
-                  </button>
-                </div>
-              )}
-              
-              {/* Create Pass Type Form */}
-              {showCreatePassType && (
-                <div className="mt-6 p-6 bg-gradient-to-r from-slate-50 to-indigo-50 border border-slate-200 rounded-xl shadow-inner">
-                  <h3 className="text-lg font-bold mb-4 text-slate-800">Create New Pass Type</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold mb-2 text-slate-700">Pass Name</label>
-                      <select
-                        className="w-full p-3 border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
-                        value={newPassType.name}
-                        onChange={(e) => setNewPassType({...newPassType, name: e.target.value})}
-                      >
-                        <option value="Teens">Teens</option>
-                        <option value="Couple">Couple</option>
-                        <option value="Family">Family</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-2 text-slate-700">Price (₹)</label>
-                      <input
-                        type="number"
-                        className="w-full p-3 border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
-                        placeholder="Enter price"
-                        value={newPassType.price}
-                        onChange={(e) => setNewPassType({...newPassType, price: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-2 text-slate-700">Max People</label>
-                      <input
-                        type="number"
-                        className="w-full p-3 border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
-                        placeholder="Max people allowed"
-                        value={newPassType.max_people}
-                        onChange={(e) => setNewPassType({...newPassType, max_people: e.target.value})}
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-semibold mb-2 text-slate-700">Description</label>
-                      <input
-                        type="text"
-                        className="w-full p-3 border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
-                        placeholder="Optional description"
-                        value={newPassType.description}
-                        onChange={(e) => setNewPassType({...newPassType, description: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (newPassType.name && newPassType.price && newPassType.max_people) {
-                          const passType = {
-                            _id: Date.now().toString(),
-                            name: newPassType.name,
-                            price: parseInt(newPassType.price),
-                            max_people: parseInt(newPassType.max_people),
-                            description: newPassType.description,
-                            is_active: true,
-                            valid_for_event: 'New Year 2025'
-                          };
-                          setPassTypes([...passTypes, passType]);
-                          setFormData(prev => ({ ...prev, pass_type_id: passType._id }));
-                          setNewPassType({ name: 'Teens', price: '', max_people: '', description: '' });
-                          setShowCreatePassType(false);
-                        } else {
-                          alert('Please fill all required fields');
-                        }
-                      }}
-                      className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium flex-1 sm:flex-none"
-                    >
-                      Add Pass Type
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowCreatePassType(false)}
-                      className="bg-slate-500 text-white px-6 py-3 rounded-xl hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium flex-1 sm:flex-none"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-              {selectedPass && selectedPass.description && (
-                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-white text-xs">ℹ️</span>
-                    </div>
-                    <p className="text-sm text-slate-700 font-medium">
-                      {selectedPass.description}
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Add More Pass Types Button */}
-              {/* {passTypes.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowCreatePassType(true)}
-                  className="mt-2 bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
-                >
-                  + Add Another Pass Type
-                </button>
-              )} */}
             </div>
 
-            {/* Pass Configuration */}
             {selectedPass && (
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-xl border border-emerald-200 shadow-sm">
+              <div className="border-b border-gray-200 pb-6 mb-6">
                 <h3 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
                   <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
                     <span className="text-white text-sm">⚙️</span>
@@ -472,7 +345,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                 <div className="space-y-6">
                   {formData.passes.map((pass, index) => (
                     <div key={index} className="space-y-6">
-                      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-md">
+                      <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg border border-green-200">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                             <label className="block text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
@@ -505,67 +378,29 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                               onChange={(e) => updatePass(index, 'people_count', parseInt(e.target.value) || 1)}
                             />
                           </div>
-                          {/* <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1">
-                              <span className="text-purple-500">🔢</span>
-                              Max People
-                            </label>
-                            <input
-                              type="number"
-                              min="1"
-                              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all"
-                              value={pass.max_people || (selectedPass.name === 'Family' ? 5 : selectedPass.max_people)}
-                              onChange={(e) => updatePass(index, 'max_people', parseInt(e.target.value) || 1)}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">Actions</label>
-                            <div className="flex flex-col gap-2">
-                              <button
-                                type="button"
-                                onClick={addPass}
-                                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-all shadow-md flex items-center justify-center gap-2"
-                              >
-                                <span>➕</span> Add Pass
-                              </button>
-                              {formData.passes.length > 1 && (
-                                <button
-                                  type="button"
-                                  onClick={() => removePass(index)}
-                                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all shadow-md flex items-center justify-center gap-2"
-                                >
-                                  <span>❌</span> Remove
-                                </button>
-                              )}
-                            </div>
-                          </div> */}
                         </div>
                       </div>
                       
-                      {/* Individual Pass Holder Details */}
-                      <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-6 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
                         <h4 className="text-base font-semibold text-slate-700 mb-5 flex items-center gap-3">
                           <div className="w-7 h-7 bg-slate-500 rounded-lg flex items-center justify-center">
                             <span className="text-white text-sm">📝</span>
                           </div>
                           Pass {String(index + 1).padStart(2, '0')} - Holder Details ({pass.people_count} {pass.people_count === 1 ? 'Person' : 'People'})
                         </h4>
-                        {/* <div className="text-xs text-blue-500 mb-2">Pass Debug: {JSON.stringify(pass.buyer_details)}</div> */}
                         <div className="space-y-4">
                           {Array.from({ length: pass.people_count }, (_, personIndex) => (
-                            <div key={personIndex} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-                              <h5 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                                <div className="w-5 h-5 bg-slate-600 rounded-full flex items-center justify-center text-white text-xs">
-                                  {personIndex + 1}
-                                </div>
-                                Person {personIndex + 1} Details {personIndex === 0 ? '(Optional)' : ''}
+                            <div key={personIndex} className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+                              <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs">{personIndex + 1}</span>
+                                Person {personIndex + 1} {personIndex === 0 ? '(Optional)' : ''}
                               </h5>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                   <label className="block text-xs font-semibold text-slate-600 mb-2">Full Name</label>
                                   <input
                                     type="text"
-                                    className="w-full px-3 py-2 text-sm border-2 border-slate-200 rounded-lg focus:outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100 transition-all duration-200"
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all"
                                     placeholder="Enter full name"
                                     value={pass.buyer_details?.[`person_${personIndex}_name`] || ''}
                                     onChange={(e) => updatePass(index, `person_${personIndex}_name`, e.target.value)}
@@ -575,7 +410,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                                   <label className="block text-xs font-semibold text-slate-600 mb-2">Phone Number</label>
                                   <input
                                     type="tel"
-                                    className="w-full px-3 py-2 text-sm border-2 border-slate-200 rounded-lg focus:outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100 transition-all duration-200"
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all"
                                     placeholder="Phone number"
                                     value={pass.buyer_details?.[`person_${personIndex}_phone`] || ''}
                                     onChange={(e) => updatePass(index, `person_${personIndex}_phone`, e.target.value)}
@@ -589,13 +424,9 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                     </div>
                   ))}
                 </div>
-                
-
-
-
 
                 {/* Summary */}
-                <div className="mt-6 bg-gradient-to-r from-indigo-50 to-slate-50 p-6 rounded-xl border border-indigo-200 shadow-sm">
+                <div className="mt-6 bg-gradient-to-r from-indigo-50 to-slate-50 p-6 rounded-xl border border-indigo-200">
                   <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
                     <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
                       <span className="text-white text-xs">📊</span>
@@ -624,8 +455,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
               </div>
             )}
 
-            {/* Customer Details */}
-            <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div className="border-b border-gray-200 pb-6 mb-6">
               <h3 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
                 <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center">
                   <span className="text-white text-sm">👤</span>
@@ -658,8 +488,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
               </div>
             </div>
 
-            {/* Payment Method */}
-            <div className="bg-gradient-to-r from-violet-50 to-purple-50 p-6 rounded-xl border border-violet-200 shadow-sm">
+            <div className="border-b border-gray-200 pb-6 mb-6">
               <label className="block text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
                 <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center">
                   <span className="text-white text-sm">💳</span>
@@ -683,8 +512,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
               </div>
             </div>
 
-            {/* Payment Status */}
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-xl border border-emerald-200 shadow-sm">
+            <div className="border-b border-gray-200 pb-6 mb-6">
               <label className="block text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
                 <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
                   <span className="text-white text-sm">✅</span>
@@ -710,7 +538,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
               </div>
               
               {/* Payment Screenshot Upload */}
-              <div className="bg-white p-4 rounded-xl border border-slate-200">
+              <div className="bg-gray-50 p-4 rounded-xl border border-slate-200">
                 <label className="block text-sm font-semibold text-slate-700 mb-3">Payment Screenshot (Optional)</label>
                 <input
                   type="file"
@@ -731,7 +559,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
             {/* Payment Details */}
             {formData.payment_mode === 'UPI' && (
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-xl border border-blue-200 shadow-sm">
+              <div className="border-b border-gray-200 pb-6 mb-6">
                 <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
                   <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs">💳</span>
@@ -766,7 +594,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
             )}
 
             {(formData.payment_mode === 'Card' || formData.payment_mode === 'Online') && (
-              <div className="bg-gradient-to-r from-violet-50 to-purple-50 p-6 rounded-xl border border-violet-200 shadow-sm">
+              <div className="border-b border-gray-200 pb-6 mb-6">
                 <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
                   <div className="w-6 h-6 bg-violet-600 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs">💳</span>
@@ -786,7 +614,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
             )}
 
             {formData.payment_mode === 'Cash' && (
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-xl border border-emerald-200 shadow-sm">
+              <div className="border-b border-gray-200 pb-6 mb-6">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center">
                     <span className="text-white text-xl">💰</span>
@@ -799,25 +627,19 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
               </div>
             )}
 
-            {/* Submit Button */}
-            <div className="pt-6 border-t border-slate-200">
+            <div>
               <button
                 type="submit"
                 disabled={loading || uploading || !formData.pass_type_id || !formData.buyer_name || !formData.buyer_phone}
-                className="w-full bg-gradient-to-r from-indigo-600 to-slate-700 text-white py-4 px-8 rounded-xl font-bold text-xl hover:from-indigo-700 hover:to-slate-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-4"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading || uploading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    <span>{uploading ? 'Uploading Image...' : 'Processing Sale...'}</span>
-                  </>
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    {uploading ? 'Uploading...' : 'Processing...'}
+                  </span>
                 ) : (
-                  <>
-                    <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                      <span className="text-xl">💰</span>
-                    </div>
-                    <span>Complete Sale - ₹{totalPrice.toLocaleString()}</span>
-                  </>
+                  `Submit Booking - ₹${totalPrice.toLocaleString()}`
                 )}
               </button>
             </div>
