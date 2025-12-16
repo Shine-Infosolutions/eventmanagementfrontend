@@ -111,20 +111,40 @@ const Dashboard = () => {
     }
   };
 
-  const StatCard = ({ title, value, icon, color, trend }) => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-gray-900">{value}</p>
-          {trend && <p className="text-sm text-green-600 mt-1">↗ {trend}</p>}
+  const StatCard = ({ title, value, icon, color, trend, onClick }) => {
+    const handleClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (onClick) {
+        onClick();
+      }
+    };
+
+    return (
+      <div 
+        className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200 ${
+          onClick ? 'cursor-pointer hover:border-blue-300 hover:shadow-lg transform hover:scale-105' : ''
+        }`}
+        onClick={handleClick}
+        role={onClick ? 'button' : 'presentation'}
+        tabIndex={onClick ? 0 : -1}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+            <p className="text-3xl font-bold text-gray-900">{value}</p>
+            {trend && <p className="text-sm text-green-600 mt-1">↗ {trend}</p>}
+          </div>
+          <div className={`p-3 rounded-full ${color}`}>
+            <span className="text-2xl">{icon}</span>
+          </div>
         </div>
-        <div className={`p-3 rounded-full ${color}`}>
-          <span className="text-2xl">{icon}</span>
-        </div>
+        {onClick && (
+          <div className="mt-2 text-xs text-blue-600 font-medium">Click to view details →</div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -165,6 +185,15 @@ const Dashboard = () => {
           icon="🎫" 
           color="bg-blue-100 text-blue-600"
           trend={`${stats.paidBookings} paid`}
+          onClick={() => {
+            console.log('Clicking Total Bookings card');
+            try {
+              navigate('/bookings');
+              console.log('Navigation called');
+            } catch (error) {
+              console.error('Navigation error:', error);
+            }
+          }}
         />
         <StatCard 
           title="Total Revenue" 
@@ -286,7 +315,11 @@ const Dashboard = () => {
             {/* Mobile Card View */}
             <div className="block sm:hidden space-y-3">
               {stats.recentBookings.map((booking) => (
-                <div key={booking._id} className="border border-gray-200 rounded-lg p-3">
+                <div 
+                  key={booking._id} 
+                  className="border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all"
+                  onClick={() => navigate('/bookings')}
+                >
                   <div className="flex justify-between items-start mb-2">
                     <div className="font-mono text-sm text-gray-900">{booking.booking_id || `NY2025-${booking._id?.slice(-6)}`}</div>
                     <span className={`px-2 py-1 rounded-full text-xs ${
@@ -325,7 +358,11 @@ const Dashboard = () => {
                 </thead>
                 <tbody>
                   {stats.recentBookings.map((booking) => (
-                    <tr key={booking._id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <tr 
+                      key={booking._id} 
+                      className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => navigate('/bookings')}
+                    >
                       <td className="py-3 px-4 font-mono text-sm">{booking.booking_id || `NY2025-${booking._id?.slice(-6)}`}</td>
                       <td className="py-3 px-4">
                         <div>

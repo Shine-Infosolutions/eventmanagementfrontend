@@ -9,6 +9,7 @@ const GateEntry = () => {
   const { user } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResult, setSearchResult] = useState(null);
+  const [allBookings, setAllBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [peopleCount, setPeopleCount] = useState(1);
   const [mode, setMode] = useState('manual'); // 'manual' or 'qr'
@@ -43,7 +44,11 @@ const GateEntry = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Search SUCCESS:', data);
+        console.log('Primary booking:', data.booking);
+        console.log('All bookings count:', data.allBookings ? data.allBookings.length : 'No allBookings field');
+        console.log('All bookings:', data.allBookings);
         setSearchResult(data.booking);
+        setAllBookings(data.allBookings || [data.booking]);
         setPeopleCount(1);
       } else {
         const errorData = await response.json();
@@ -61,36 +66,86 @@ const GateEntry = () => {
         if (fallbackResponse.ok) {
           const bookings = await fallbackResponse.json();
           console.log('All bookings:', bookings.length);
+          console.log('All phone numbers in database:', bookings.map(b => b.buyer_phone).filter(Boolean));
           
-          const found = bookings.find(b => 
-            b.booking_id?.toLowerCase().includes(searchValue.toLowerCase()) ||
-            b.buyer_phone === searchValue ||
-            b.buyer_name?.toLowerCase().includes(searchValue.toLowerCase())
-          );
+          // Check if search value looks like a phone number
+          const cleanSearchValue = searchValue.replace(/\D/g, ''); // Remove non-digits
+          const isPhoneNumber = cleanSearchValue.length >= 10;
           
-          if (found) {
-            // Calculate total capacity and entered from passes array if it exists
-            if (found.passes && Array.isArray(found.passes)) {
-              found.total_people = found.passes.reduce((sum, pass) => sum + pass.people_count, 0);
-              found.total_people_entered = found.passes.reduce((sum, pass) => sum + (pass.people_entered || 0), 0);
+          let allBookingsForSearch = [];
+          
+          if (isPhoneNumber) {
+            // Simple phone search - try multiple approaches
+            console.log('=== PHONE SEARCH DEBUG ===');
+            console.log('Searching for phone:', searchValue);
+            console.log('Total bookings to search:', bookings.length);
+            
+            // Method 1: Exact match
+            const exactMatch = bookings.filter(b => b.buyer_phone === searchValue);
+            console.log('Exact match results:', exactMatch.length);
+            
+            // Method 2: Contains search
+            const containsMatch = bookings.filter(b => b.buyer_phone && b.buyer_phone.includes(searchValue));
+            console.log('Contains match results:', containsMatch.length);
+            
+            // Method 3: Reverse contains
+            const reverseMatch = bookings.filter(b => b.buyer_phone && searchValue.includes(b.buyer_phone));
+            console.log('Reverse contains results:', reverseMatch.length);
+            
+            // Show first few phone numbers for comparison
+            console.log('Sample phone numbers in DB:', bookings.slice(0, 10).map(b => `"${b.buyer_phone}"`));
+            
+            allBookingsForSearch = exactMatch.length > 0 ? exactMatch : 
+                                 containsMatch.length > 0 ? containsMatch : 
+                                 reverseMatch;
+            
+            console.log('Final result count:', allBookingsForSearch.length);
+            console.log('=== END DEBUG ===');
+          } else {
+            // Search by booking ID or name
+            const foundByBookingId = bookings.find(b => 
+              b.booking_id?.toLowerCase().includes(searchValue.toLowerCase())
+            );
+            
+            if (foundByBookingId) {
+              // If found by booking ID, get all bookings for that phone
+              allBookingsForSearch = bookings.filter(b => b.buyer_phone === foundByBookingId.buyer_phone);
+              console.log('Booking ID search - Found', allBookingsForSearch.length, 'bookings for phone:', foundByBookingId.buyer_phone);
             } else {
-              // Fallback for old structure - find all bookings for same phone
-              const allBookingsForPhone = bookings.filter(b => b.buyer_phone === found.buyer_phone);
-              const totalCapacity = allBookingsForPhone.reduce((sum, booking) => sum + booking.total_people, 0);
-              const totalEntered = allBookingsForPhone.reduce((sum, booking) => sum + (booking.people_entered || 0), 0);
-              
-              found.total_people = totalCapacity;
-              found.people_entered = totalEntered;
+              // If searching by name, only show bookings with that name
+              allBookingsForSearch = bookings.filter(b => 
+                b.buyer_name?.toLowerCase().includes(searchValue.toLowerCase())
+              );
+              console.log('Name search - Found', allBookingsForSearch.length, 'bookings with name containing:', searchValue);
             }
           }
           
-          if (found) {
-            console.log('✅ Found via fallback:', found);
-            setSearchResult(found);
+          if (allBookingsForSearch.length > 0) {
+            // Calculate totals across all bookings
+            const totalCapacity = allBookingsForSearch.reduce((sum, booking) => sum + (booking.total_people || 1), 0);
+            const totalEntered = allBookingsForSearch.reduce((sum, booking) => sum + (booking.people_entered || 0), 0);
+            
+            // Use the first booking as the primary result but with aggregated data
+            const primaryBooking = { ...allBookingsForSearch[0] };
+            primaryBooking.total_people = totalCapacity;
+            primaryBooking.people_entered = totalEntered;
+            primaryBooking.total_people_entered = totalEntered;
+            
+            console.log('✅ Found', allBookingsForSearch.length, 'bookings');
+            console.log('Total capacity:', totalCapacity, 'Total entered:', totalEntered);
+            
+            setSearchResult(primaryBooking);
+            setAllBookings(allBookingsForSearch);
             setPeopleCount(1);
           } else {
             console.log('❌ Not found in', bookings.length, 'bookings');
+            console.log('=== SEARCH FAILED ===');
+            console.log('Searched for:', searchValue);
+            console.log('All phones in DB:', bookings.map(b => b.buyer_phone).filter(Boolean));
+            console.log('Booking sample:', bookings.slice(0, 3));
+            console.log('=== END FAILED ===');
             setSearchResult('not_found');
+            setAllBookings([]);
           }
         } else {
           console.log('❌ Fallback also failed');
@@ -324,156 +379,112 @@ const GateEntry = () => {
         </div>
       )}
 
-      {searchResult && searchResult !== 'not_found' && (
-        <div className="bg-white rounded-lg shadow-lg border">
-          <div className="bg-blue-600 text-white p-3 sm:p-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <h3 className="font-bold text-sm sm:text-base">
-                  {searchResult.passes && searchResult.passes.length > 0 
-                    ? `${searchResult.passes.length} Pass${searchResult.passes.length > 1 ? 'es' : ''} (${searchResult.passes.map(p => p.pass_type_name || 'Pass').join(', ')})` 
-                    : (searchResult.pass_type_id?.name || 'Pass')}
-                </h3>
-                <p className="text-xs opacity-90 truncate">#{searchResult.booking_id}</p>
-              </div>
-              <span className="text-xs bg-white/20 px-2 py-1 rounded flex-shrink-0">NY 2025</span>
-            </div>
-          </div>
-
-          <div className="p-3 sm:p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-2 mb-4 sm:mb-3">
-              <div className="text-center sm:text-left">
-                <p className="text-gray-500 text-xs sm:text-sm">Guest</p>
-                <p className="font-semibold text-sm sm:text-base truncate">{searchResult.buyer_name}</p>
-              </div>
-              <div className="text-center sm:text-left">
-                <p className="text-gray-500 text-xs sm:text-sm">Phone</p>
-                <p className="font-semibold text-sm sm:text-base">{searchResult.buyer_phone}</p>
-              </div>
-              <div className="text-center sm:text-left">
-                <p className="text-gray-500 text-xs sm:text-sm">Entry Status</p>
-                <p className="font-semibold text-sm sm:text-base">{searchResult.total_people_entered || searchResult.people_entered || 0} of {searchResult.total_people}</p>
-              </div>
-            </div>
-
-            <div className="border-t pt-6">
-              {searchResult.checked_in && (searchResult.total_people_entered || searchResult.people_entered || 0) >= searchResult.total_people ? (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <div className="flex items-center">
-                    <FiAlertTriangle className="text-red-400 text-4xl mr-4 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-red-800">⚠️ ALREADY CHECKED IN</h3>
-                      <p className="text-red-600 mt-1">
-                        Checked in at: {searchResult.checked_in_at ? new Date(searchResult.checked_in_at).toLocaleString() : 'Unknown time'}
-                      </p>
-                      <p className="text-red-600">
-                        By: {searchResult.scanned_by || 'Unknown staff'}
-                      </p>
-                      <p className="text-red-600 font-medium">
-                        All {searchResult.total_people} people have entered. Pass fully utilized.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {!showAdminOverride ? (
-                    <div className="mt-4">
-                      <button
-                        onClick={() => setShowAdminOverride(true)}
-                        className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
-                      >
-                        🔐 Admin Override
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="mt-4 bg-white p-4 rounded-lg border">
-                      <h4 className="font-semibold text-gray-800 mb-2">Admin Override Required</h4>
-                      <div className="flex gap-2">
-                        <input
-                          type="password"
-                          placeholder="Enter Admin PIN"
-                          className="flex-1 px-3 py-2 border rounded-lg"
-                          value={adminPin}
-                          onChange={(e) => setAdminPin(e.target.value)}
-                        />
-                        <button
-                          onClick={() => handleCheckIn(true)}
-                          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-                        >
-                          Override
-                        </button>
-                        <button
-                          onClick={() => { setShowAdminOverride(false); setAdminPin(''); }}
-                          className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
-                        >
-                          Cancel
-                        </button>
+      {searchResult && searchResult !== 'not_found' && allBookings.length >= 1 && (
+        <div className="bg-white rounded-lg shadow-lg border p-6">
+          <h4 className="text-lg font-semibold text-gray-900 mb-4">
+            All Bookings for {searchResult.buyer_phone} ({allBookings.length} total)
+          </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                  {allBookings.map((booking, index) => (
+                    <div key={booking._id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                      {/* Header */}
+                      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3 sm:p-4 rounded-t-xl">
+                        <div className="flex justify-between items-center">
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-bold text-sm sm:text-base truncate">
+                              {booking.pass_type_id?.name || 'Pass'}
+                            </h4>
+                            <p className="text-xs opacity-90 truncate">#{booking.booking_id || `NY2025-${booking._id?.slice(-6)}`}</p>
+                          </div>
+                          <span className="text-xs bg-white/20 px-2 py-1 rounded flex-shrink-0 ml-2">NY 2025</span>
+                        </div>
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="p-3 sm:p-4">
+                        <div className="space-y-3 mb-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                            <div>
+                              <p className="text-gray-500 text-xs">Guest</p>
+                              <p className="font-semibold text-sm truncate">{booking.buyer_name}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 text-xs">Phone</p>
+                              <p className="font-semibold text-sm">{booking.buyer_phone}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                            <div>
+                              <p className="text-gray-500 text-xs">Amount</p>
+                              <p className="font-semibold text-sm text-green-600">₹{booking.total_amount || booking.pass_type_id?.price || 0}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 text-xs">Capacity</p>
+                              <p className="font-semibold text-sm">{booking.total_people || 1} people</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center">
+                          <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium text-center ${
+                            (booking.people_entered || 0) >= (booking.total_people || 1)
+                              ? 'bg-green-100 text-green-800'
+                              : booking.people_entered > 0
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {booking.people_entered || 0}/{booking.total_people || 1} entered
+                          </span>
+                          <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium text-center ${
+                            booking.payment_status === 'Paid' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {booking.payment_status || 'Pending'}
+                          </span>
+                        </div>
+                        
+                        {booking.payment_mode && (
+                          <div className="mt-3 pt-3 border-t border-gray-100">
+                            <p className="text-xs text-gray-500 text-center sm:text-left">
+                              <strong>Payment:</strong> {booking.payment_mode}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Check-in Button for Individual Booking */}
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          {(booking.people_entered || 0) >= (booking.total_people || 1) ? (
+                            <div className="text-center">
+                              <span className="text-xs text-green-600 font-medium">✅ Fully Checked In</span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                // Set this booking as primary for check-in
+                                setSearchResult({
+                                  ...booking,
+                                  total_people: booking.total_people || 1,
+                                  people_entered: booking.people_entered || 0
+                                });
+                                setPeopleCount(1);
+                                handleCheckIn(false);
+                              }}
+                              className="w-full bg-green-600 text-white py-2 sm:py-3 px-3 rounded-lg text-xs sm:text-sm hover:bg-green-700 font-medium transition-colors"
+                            >
+                              Check In ({(booking.total_people || 1) - (booking.people_entered || 0)} available)
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              ) : (searchResult.total_people_entered || searchResult.people_entered || 0) >= searchResult.total_people ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                  <div className="flex items-center">
-                    <FiCheckCircle className="text-green-400 text-4xl mr-4" />
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-green-800">Fully Checked In</h3>
-                      <p className="text-green-600 mt-1">
-                        All {searchResult.total_people} people have entered. Pass is fully utilized.
-                      </p>
-                      {searchResult.checked_in_at && (
-                        <p className="text-green-600 text-sm mt-1">
-                          Last entry: {new Date(searchResult.checked_in_at).toLocaleString()} by {searchResult.scanned_by}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 sm:p-6">
-                  <div className="text-center">
-                    <p className="text-base sm:text-lg font-bold text-green-800 mb-3">Ready for Entry</p>
-                    <p className="text-sm sm:text-base text-green-700 mb-3">
-                      {searchResult.total_people - (searchResult.total_people_entered || searchResult.people_entered || 0)} can enter
-                    </p>
-                    
-                    {(searchResult.total_people_entered || searchResult.people_entered || 0) > 0 && (
-                      <div className="mb-3 p-2 bg-amber-100 rounded text-sm text-amber-800">
-                        {searchResult.total_people_entered || searchResult.people_entered} already entered
-                      </div>
-                    )}
-                    
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Select number of people</label>
-                      <select
-                        value={peopleCount}
-                        onChange={(e) => setPeopleCount(Number(e.target.value))}
-                        className="w-full sm:w-auto px-3 py-2 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                      >
-                        {Array.from({ length: searchResult.total_people - (searchResult.total_people_entered || searchResult.people_entered || 0) }, (_, i) => (
-                          <option key={i + 1} value={i + 1}>{i + 1} person{i > 0 ? 's' : ''}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <button
-                      onClick={() => handleCheckIn(false)}
-                      className="w-full sm:w-auto bg-green-600 text-white px-6 py-3 rounded-lg text-base sm:text-lg hover:bg-green-700 font-semibold shadow-lg"
-                    >
-                      <FiCheckCircle className="inline mr-2" /> 
-                      Check In {peopleCount} {peopleCount === 1 ? 'Person' : 'People'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {searchResult.payment_status && (
-              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">
-                  <strong>Payment:</strong> {searchResult.payment_status} via {searchResult.payment_mode}
-                </p>
-              </div>
-            )}
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Summary:</strong> {allBookings.reduce((sum, b) => sum + (b.people_entered || 0), 0)} of {allBookings.reduce((sum, b) => sum + (b.total_people || 1), 0)} total people have entered across all bookings.
+            </p>
           </div>
         </div>
       )}

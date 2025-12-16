@@ -287,26 +287,32 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
   const totalPrice = currentPrice * formData.passes.length;
 
   return (
-    <div className="bg-white">
-      <div className="w-full max-w-6xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+      <div className="container mx-auto px-4 py-6 max-w-full xl:max-w-7xl">
         
         {/* Header */}
-        <div className="p-4 text-center">
-          <h1 className="text-xl font-bold text-gray-900">Event Pass Sales</h1>
-          <p className="text-gray-600 text-sm">New Year 2025 Celebration</p>
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-600 to-slate-700 rounded-full mb-4">
+            <span className="text-2xl text-white">🎫</span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Event Pass Sales</h1>
+          <p className="text-slate-600 text-lg">New Year 2025 Celebration</p>
+          <div className="w-24 h-1 bg-gradient-to-r from-indigo-600 to-slate-700 mx-auto mt-4 rounded-full"></div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-100 p-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+          <form onSubmit={handleSubmit} className="space-y-6 p-6 md:p-8">
             
             {/* Pass Type Selection */}
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <label className="block text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <span className="text-blue-600">🎫</span>
+            <div className="bg-gradient-to-r from-indigo-50 to-slate-50 p-6 rounded-xl border border-indigo-200 shadow-sm">
+              <label className="block text-lg font-semibold text-slate-800 mb-4 flex items-center gap-3">
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm">🎫</span>
+                </div>
                 Select Pass Type
               </label>
               <select
-                className="w-full p-3 border-2 border-blue-200 rounded-lg text-base bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                className="w-full p-4 border-2 border-slate-200 rounded-xl text-base bg-white shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 appearance-none cursor-pointer"
                 value={formData.pass_type_id}
                 onChange={(e) => {
                   const selectedPassType = passTypes.find(p => p._id === e.target.value);
@@ -321,25 +327,23 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                 <option value="">Choose a pass type... ({passTypes.length} available)</option>
                 {passTypes.map((passType) => (
                   <option key={passType._id} value={passType._id}>
-                    {passType.name} - ₹{passType.price} (Max: {passType.max_people} people)
+                    {passType.name} - ₹{passType.price.toLocaleString()} (Max: {passType.max_people} people)
                   </option>
                 ))}
               </select>
               
-              {/* Debug Info */}
-              <div className="text-xs text-gray-500 mt-1">
-                Pass Types Loaded: {passTypes.length}
-                {passTypes.length > 0 && (
-                  <div>Available: {passTypes.map(pt => pt.name).join(', ')}</div>
-                )}
-              </div>
               {passTypes.length === 0 && (
-                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
-                  <p className="text-sm text-red-600 mb-3">No pass types available.</p>
+                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">⚠️</span>
+                    </div>
+                    <p className="text-sm text-red-600 font-medium">No pass types available.</p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setShowCreatePassType(true)}
-                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
                   >
                     + Create Pass Type
                   </button>
@@ -348,13 +352,13 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
               
               {/* Create Pass Type Form */}
               {showCreatePassType && (
-                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
-                  <h3 className="font-bold mb-3">Create New Pass Type</h3>
+                <div className="mt-6 p-6 bg-gradient-to-r from-slate-50 to-indigo-50 border border-slate-200 rounded-xl shadow-inner">
+                  <h3 className="text-lg font-bold mb-4 text-slate-800">Create New Pass Type</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Pass Name</label>
+                      <label className="block text-sm font-semibold mb-2 text-slate-700">Pass Name</label>
                       <select
-                        className="w-full p-2 border rounded"
+                        className="w-full p-3 border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
                         value={newPassType.name}
                         onChange={(e) => setNewPassType({...newPassType, name: e.target.value})}
                       >
@@ -364,37 +368,37 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Price (₹)</label>
+                      <label className="block text-sm font-semibold mb-2 text-slate-700">Price (₹)</label>
                       <input
                         type="number"
-                        className="w-full p-2 border rounded"
+                        className="w-full p-3 border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
                         placeholder="Enter price"
                         value={newPassType.price}
                         onChange={(e) => setNewPassType({...newPassType, price: e.target.value})}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Max People</label>
+                      <label className="block text-sm font-semibold mb-2 text-slate-700">Max People</label>
                       <input
                         type="number"
-                        className="w-full p-2 border rounded"
+                        className="w-full p-3 border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
                         placeholder="Max people allowed"
                         value={newPassType.max_people}
                         onChange={(e) => setNewPassType({...newPassType, max_people: e.target.value})}
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Description</label>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold mb-2 text-slate-700">Description</label>
                       <input
                         type="text"
-                        className="w-full p-2 border rounded"
+                        className="w-full p-3 border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
                         placeholder="Optional description"
                         value={newPassType.description}
                         onChange={(e) => setNewPassType({...newPassType, description: e.target.value})}
                       />
                     </div>
                   </div>
-                  <div className="flex space-x-2 mt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 mt-6">
                     <button
                       type="button"
                       onClick={() => {
@@ -416,14 +420,14 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                           alert('Please fill all required fields');
                         }
                       }}
-                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                      className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium flex-1 sm:flex-none"
                     >
                       Add Pass Type
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowCreatePassType(false)}
-                      className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                      className="bg-slate-500 text-white px-6 py-3 rounded-xl hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium flex-1 sm:flex-none"
                     >
                       Cancel
                     </button>
@@ -431,9 +435,16 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                 </div>
               )}
               {selectedPass && selectedPass.description && (
-                <p className="text-sm text-gray-600 mt-1 bg-yellow-50 p-2 rounded">
-                  {selectedPass.description}
-                </p>
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-white text-xs">ℹ️</span>
+                    </div>
+                    <p className="text-sm text-slate-700 font-medium">
+                      {selectedPass.description}
+                    </p>
+                  </div>
+                </div>
               )}
               
               {/* Add More Pass Types Button */}
@@ -450,39 +461,46 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
             {/* Pass Configuration */}
             {selectedPass && (
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <span className="text-green-600">⚙️</span>
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-xl border border-emerald-200 shadow-sm">
+                <h3 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
+                  <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">⚙️</span>
+                  </div>
                   Pass Configuration
                 </h3>
                 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {formData.passes.map((pass, index) => (
-                    <div key={index} className="space-y-4">
-                      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div key={index} className="space-y-6">
+                      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-md">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1">
-                              <span className="text-green-500">💰</span>
-                              Pass {String(index + 1).padStart(3, '0')} - Price
+                            <label className="block text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                              <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-xs">💰</span>
+                              </div>
+                              Pass {String(index + 1).padStart(2, '0')} - Price (₹)
                             </label>
                             <input
                               type="number"
-                              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all"
+                              className="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 text-lg font-semibold"
                               placeholder="Enter price"
                               value={formData.custom_price || selectedPass.price}
                               onChange={(e) => setFormData({...formData, custom_price: e.target.value})}
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1">
-                              <span className="text-blue-500">👥</span>
+                            <label className="block text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                              <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-xs">👥</span>
+                              </div>
                               People Count
                             </label>
                             <input
                               type="number"
                               min="1"
-                              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                              max={selectedPass.max_people}
+                              className="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 text-lg font-semibold"
                               value={pass.people_count}
                               onChange={(e) => updatePass(index, 'people_count', parseInt(e.target.value) || 1)}
                             />
@@ -525,35 +543,39 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                       </div>
                       
                       {/* Individual Pass Holder Details */}
-                      <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                          <span className="text-amber-600">📝</span>
-                          Pass {String(index + 1).padStart(3, '0')} - Holder Details ({pass.people_count} {pass.people_count === 1 ? 'Person' : 'People'})
+                      <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h4 className="text-base font-semibold text-slate-700 mb-5 flex items-center gap-3">
+                          <div className="w-7 h-7 bg-slate-500 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-sm">📝</span>
+                          </div>
+                          Pass {String(index + 1).padStart(2, '0')} - Holder Details ({pass.people_count} {pass.people_count === 1 ? 'Person' : 'People'})
                         </h4>
                         {/* <div className="text-xs text-blue-500 mb-2">Pass Debug: {JSON.stringify(pass.buyer_details)}</div> */}
                         <div className="space-y-4">
                           {Array.from({ length: pass.people_count }, (_, personIndex) => (
-                            <div key={personIndex} className="bg-white border border-gray-200 rounded-lg p-3">
-                              <h5 className="text-sm font-medium text-gray-700 mb-2">
+                            <div key={personIndex} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+                              <h5 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                                <div className="w-5 h-5 bg-slate-600 rounded-full flex items-center justify-center text-white text-xs">
+                                  {personIndex + 1}
+                                </div>
                                 Person {personIndex + 1} Details {personIndex === 0 ? '(Optional)' : ''}
                               </h5>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
+                                  <label className="block text-xs font-semibold text-slate-600 mb-2">Full Name</label>
                                   <input
                                     type="text"
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                    className="w-full px-3 py-2 text-sm border-2 border-slate-200 rounded-lg focus:outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100 transition-all duration-200"
                                     placeholder="Enter full name"
                                     value={pass.buyer_details?.[`person_${personIndex}_name`] || ''}
                                     onChange={(e) => updatePass(index, `person_${personIndex}_name`, e.target.value)}
                                   />
-                                  {/* <div className="text-xs text-red-500">Debug: {pass.buyer_details?.[`person_${personIndex}_name`] || 'EMPTY'}</div> */}
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                                  <label className="block text-xs font-semibold text-slate-600 mb-2">Phone Number</label>
                                   <input
                                     type="tel"
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                    className="w-full px-3 py-2 text-sm border-2 border-slate-200 rounded-lg focus:outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100 transition-all duration-200"
                                     placeholder="Phone number"
                                     value={pass.buyer_details?.[`person_${personIndex}_phone`] || ''}
                                     onChange={(e) => updatePass(index, `person_${personIndex}_phone`, e.target.value)}
@@ -573,23 +595,29 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
 
                 {/* Summary */}
-                <div className="mt-4 bg-blue-50 p-4 rounded-lg">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div>
-                      <div className="text-2xl font-bold text-blue-600">{formData.passes.length}</div>
-                      <div className="text-sm text-gray-600">Total Passes</div>
+                <div className="mt-6 bg-gradient-to-r from-indigo-50 to-slate-50 p-6 rounded-xl border border-indigo-200 shadow-sm">
+                  <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">📊</span>
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold text-blue-600">{totalPeople}</div>
-                      <div className="text-sm text-gray-600">Total People</div>
+                    Order Summary
+                  </h4>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-white p-4 rounded-xl text-center shadow-sm">
+                      <div className="text-2xl font-bold text-indigo-600 mb-1">{formData.passes.length}</div>
+                      <div className="text-sm text-slate-600 font-medium">Total Passes</div>
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold text-green-600">₹{currentPrice}</div>
-                      <div className="text-sm text-gray-600">Per Pass</div>
+                    <div className="bg-white p-4 rounded-xl text-center shadow-sm">
+                      <div className="text-2xl font-bold text-indigo-600 mb-1">{totalPeople}</div>
+                      <div className="text-sm text-slate-600 font-medium">Total People</div>
                     </div>
-                    <div>
-                      <div className="text-3xl font-bold text-green-600">₹{totalPrice.toLocaleString()}</div>
-                      <div className="text-sm text-gray-600">Total Amount</div>
+                    <div className="bg-white p-4 rounded-xl text-center shadow-sm">
+                      <div className="text-2xl font-bold text-emerald-600 mb-1">₹{currentPrice.toLocaleString()}</div>
+                      <div className="text-sm text-slate-600 font-medium">Per Pass</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl text-center shadow-sm border-2 border-emerald-200">
+                      <div className="text-3xl font-bold text-emerald-600 mb-1">₹{totalPrice.toLocaleString()}</div>
+                      <div className="text-sm text-slate-600 font-medium">Total Amount</div>
                     </div>
                   </div>
                 </div>
@@ -597,29 +625,31 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
             )}
 
             {/* Customer Details */}
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="text-gray-600">👤</span>
+            <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-6 rounded-xl border border-slate-200 shadow-sm">
+              <h3 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm">👤</span>
+                </div>
                 Customer Details
               </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Primary Customer Name *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">Primary Customer Name *</label>
                   <input
                     type="text"
                     required
-                    className="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-lg text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full p-4 border-2 border-slate-300 rounded-xl text-base focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200"
                     placeholder="Enter full name"
                     value={formData.buyer_name}
                     onChange={(e) => setFormData({...formData, buyer_name: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Primary Mobile Number *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">Primary Mobile Number *</label>
                   <input
                     type="tel"
                     required
-                    className="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-lg text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full p-4 border-2 border-slate-300 rounded-xl text-base focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200"
                     placeholder="Enter mobile number"
                     value={formData.buyer_phone}
                     onChange={(e) => setFormData({...formData, buyer_phone: e.target.value})}
@@ -629,88 +659,103 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
             </div>
 
             {/* Payment Method */}
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-              <label className="block text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="text-purple-600">💳</span>
+            <div className="bg-gradient-to-r from-violet-50 to-purple-50 p-6 rounded-xl border border-violet-200 shadow-sm">
+              <label className="block text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm">💳</span>
+                </div>
                 Payment Method
               </label>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {['Cash', 'UPI', 'Card', 'Online'].map((mode) => (
-                  <label key={mode} className="flex items-center space-x-2 cursor-pointer p-3 border-2 border-gray-200 rounded-lg hover:border-purple-300 transition-colors">
+                  <label key={mode} className="flex items-center space-x-3 cursor-pointer p-4 border-2 border-slate-200 rounded-xl hover:border-violet-400 hover:bg-white transition-all duration-200 shadow-sm hover:shadow-md">
                     <input
                       type="radio"
                       name="payment_mode"
                       value={mode}
                       checked={formData.payment_mode === mode}
                       onChange={(e) => setFormData({...formData, payment_mode: e.target.value, upi_id: '', transaction_id: ''})}
-                      className="w-4 h-4 text-purple-600"
+                      className="w-5 h-5 text-violet-600 focus:ring-violet-500"
                     />
-                    <span className="font-medium text-gray-700">{mode}</span>
+                    <span className="font-semibold text-slate-700">{mode}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Payment Status */}
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <label className="block text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="text-green-600">✅</span>
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-xl border border-emerald-200 shadow-sm">
+              <label className="block text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm">✅</span>
+                </div>
                 Payment Status
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {['Paid', 'Pending'].map((status) => (
-                  <label key={status} className="flex items-center space-x-3 cursor-pointer p-3 border-2 border-gray-200 rounded-lg hover:border-green-300 transition-colors">
+                  <label key={status} className="flex items-center space-x-4 cursor-pointer p-4 border-2 border-slate-200 rounded-xl hover:border-emerald-400 hover:bg-white transition-all duration-200 shadow-sm hover:shadow-md">
                     <input
                       type="radio"
                       name="payment_status"
                       value={status}
                       checked={formData.payment_status === status}
                       onChange={(e) => setFormData({...formData, payment_status: e.target.value})}
-                      className="w-4 h-4 text-green-600"
+                      className="w-5 h-5 text-emerald-600 focus:ring-emerald-500"
                     />
-                    <span className={`font-medium text-lg ${
-                      status === 'Paid' ? 'text-green-600' : 'text-yellow-600'
+                    <span className={`font-semibold text-lg ${
+                      status === 'Paid' ? 'text-emerald-600' : 'text-amber-600'
                     }`}>{status}</span>
                   </label>
                 ))}
               </div>
               
               {/* Payment Screenshot Upload */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Screenshot (Optional)</label>
+              <div className="bg-white p-4 rounded-xl border border-slate-200">
+                <label className="block text-sm font-semibold text-slate-700 mb-3">Payment Screenshot (Optional)</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setFormData({...formData, payment_screenshot: e.target.files[0]})}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  className="w-full p-3 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
                 />
                 {formData.payment_screenshot && (
-                  <p className="text-sm text-green-600 mt-1">📷 {formData.payment_screenshot.name}</p>
+                  <div className="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <p className="text-sm text-emerald-700 font-medium flex items-center gap-2">
+                      <span>📷</span>
+                      {formData.payment_screenshot.name}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Payment Details */}
             {formData.payment_mode === 'UPI' && (
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-xl border border-blue-200 shadow-sm">
+                <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">💳</span>
+                  </div>
+                  UPI Payment Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium mb-1">UPI ID *</label>
+                    <label className="block text-sm font-semibold mb-3 text-slate-700">UPI ID *</label>
                     <input
                       type="text"
                       required
-                      className="w-full p-2 border rounded"
+                      className="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200"
                       placeholder="customer@upi"
                       value={formData.upi_id}
                       onChange={(e) => setFormData({...formData, upi_id: e.target.value})}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Transaction ID *</label>
+                    <label className="block text-sm font-semibold mb-3 text-slate-700">Transaction ID *</label>
                     <input
                       type="text"
                       required
-                      className="w-full p-2 border rounded"
+                      className="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200"
                       placeholder="Transaction ID"
                       value={formData.transaction_id}
                       onChange={(e) => setFormData({...formData, transaction_id: e.target.value})}
@@ -721,12 +766,18 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
             )}
 
             {(formData.payment_mode === 'Card' || formData.payment_mode === 'Online') && (
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <label className="block text-sm font-medium mb-1">Transaction ID *</label>
+              <div className="bg-gradient-to-r from-violet-50 to-purple-50 p-6 rounded-xl border border-violet-200 shadow-sm">
+                <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                  <div className="w-6 h-6 bg-violet-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">💳</span>
+                  </div>
+                  {formData.payment_mode} Payment Details
+                </h4>
+                <label className="block text-sm font-semibold mb-3 text-slate-700">Transaction ID *</label>
                 <input
                   type="text"
                   required
-                  className="w-full p-2 border rounded"
+                  className="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-violet-500 focus:ring-4 focus:ring-violet-100 transition-all duration-200"
                   placeholder="Enter transaction ID"
                   value={formData.transaction_id}
                   onChange={(e) => setFormData({...formData, transaction_id: e.target.value})}
@@ -735,27 +786,37 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
             )}
 
             {formData.payment_mode === 'Cash' && (
-              <div className="bg-green-50 p-4 rounded-lg">
-                <p className="text-green-800">💰 Cash payment - No additional details required</p>
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-xl border border-emerald-200 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xl">💰</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-emerald-800">Cash Payment</h4>
+                    <p className="text-emerald-700">No additional details required</p>
+                  </div>
+                </div>
               </div>
             )}
 
             {/* Submit Button */}
-            <div className="pt-4">
+            <div className="pt-6 border-t border-slate-200">
               <button
                 type="submit"
                 disabled={loading || uploading || !formData.pass_type_id || !formData.buyer_name || !formData.buyer_phone}
-                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-3"
+                className="w-full bg-gradient-to-r from-indigo-600 to-slate-700 text-white py-4 px-8 rounded-xl font-bold text-xl hover:from-indigo-700 hover:to-slate-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-4"
               >
                 {loading || uploading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    {uploading ? 'Uploading Image...' : 'Processing...'}
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                    <span>{uploading ? 'Uploading Image...' : 'Processing Sale...'}</span>
                   </>
                 ) : (
                   <>
-                    <span>💰</span>
-                    Submit - ₹{totalPrice.toLocaleString()}
+                    <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <span className="text-xl">💰</span>
+                    </div>
+                    <span>Complete Sale - ₹{totalPrice.toLocaleString()}</span>
                   </>
                 )}
               </button>
