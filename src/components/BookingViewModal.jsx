@@ -4,9 +4,9 @@ const BookingViewModal = ({ booking, onClose }) => {
   if (!booking) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-start justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl max-w-4xl w-full my-4 shadow-xl">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-t-xl border-b">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-xl max-w-4xl w-full my-2 sm:my-4 shadow-xl">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 rounded-t-xl border-b">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
               <span className="text-white text-xl">📋</span>
@@ -24,8 +24,8 @@ const BookingViewModal = ({ booking, onClose }) => {
           </div>
         </div>
         
-        <div className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div className="bg-blue-50 p-3 rounded border border-blue-200">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-blue-600">👤</span>
@@ -137,10 +137,12 @@ const BookingViewModal = ({ booking, onClose }) => {
                 <div className="space-y-2">
                   {booking.pass_holders.map((holder, index) => (
                     holder.name && (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        <span className="w-5 h-5 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs">{index + 1}</span>
-                        <span className="font-medium">{holder.name}</span>
-                        {holder.phone && <span className="text-gray-500">({holder.phone})</span>}
+                      <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs">{index + 1}</span>
+                          <span className="font-medium">{holder.name}</span>
+                        </div>
+                        {holder.phone && <span className="text-gray-500 text-xs sm:text-sm ml-7 sm:ml-0">({holder.phone})</span>}
                       </div>
                     )
                   ))}
