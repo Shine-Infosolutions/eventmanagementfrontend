@@ -17,9 +17,14 @@ const GateEntry = () => {
   const [adminPin, setAdminPin] = useState('');
   const videoRef = useRef(null);
   const [scanning, setScanning] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   const handleSearch = async (searchValue = searchTerm) => {
-    if (!searchValue.trim()) return;
+    if (!searchValue.trim()) {
+      setSearchResult(null);
+      setAllBookings([]);
+      return;
+    }
     
     setLoading(true);
     console.log('Searching for:', searchValue);
@@ -240,7 +245,23 @@ const GateEntry = () => {
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
+      // Clear any pending timeout
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+        setSearchTimeout(null);
+      }
       handleSearch();
+    }
+  };
+
+  // Clear search results
+  const clearSearch = () => {
+    setSearchTerm('');
+    setSearchResult(null);
+    setAllBookings([]);
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+      setSearchTimeout(null);
     }
   };
 
@@ -282,28 +303,64 @@ const GateEntry = () => {
           <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-2">Search Pass</label>
-              <input
-                type="text"
-                placeholder="Enter Pass ID, Phone Number, or Name"
-                className="w-full px-3 sm:px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base sm:text-lg"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  if (e.target.value.trim()) {
-                    setTimeout(() => handleSearch(e.target.value), 500);
-                  }
-                }}
-                onKeyPress={handleKeyPress}
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Enter Pass ID, Phone Number, or Name"
+                  className="w-full px-3 sm:px-4 py-3 sm:py-4 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base sm:text-lg"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSearchTerm(value);
+                    
+                    // Clear previous timeout
+                    if (searchTimeout) {
+                      clearTimeout(searchTimeout);
+                    }
+                    
+                    // Clear results only if input is completely empty
+                    if (!value.trim()) {
+                      setSearchResult(null);
+                      setAllBookings([]);
+                      setSearchTimeout(null);
+                      return;
+                    }
+                    
+                    // Set new timeout for search
+                    const newTimeout = setTimeout(() => {
+                      handleSearch(value);
+                    }, 1000);
+                    
+                    setSearchTimeout(newTimeout);
+                  }}
+                  onKeyPress={handleKeyPress}
+                />
+                {searchTerm && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <FiX className="text-lg" />
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
               <button
                 onClick={() => handleSearch()}
                 disabled={loading || !searchTerm.trim()}
-                className="w-full lg:w-auto bg-blue-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 font-medium text-base sm:text-lg"
+                className="bg-blue-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 font-medium text-base sm:text-lg"
               >
                 {loading ? 'Searching...' : 'Search'}
               </button>
+              {(searchResult || allBookings.length > 0) && (
+                <button
+                  onClick={clearSearch}
+                  className="bg-gray-500 text-white px-4 py-3 sm:py-4 rounded-lg hover:bg-gray-600 font-medium text-base sm:text-lg"
+                >
+                  Clear
+                </button>
+              )}
             </div>
           </div>
         ) : (
@@ -380,54 +437,51 @@ const GateEntry = () => {
       )}
 
       {searchResult && searchResult !== 'not_found' && allBookings.length >= 1 && (
-        <div className="bg-white rounded-lg shadow-lg border p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-lg shadow-lg border p-3 sm:p-6">
+          <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
             All Bookings for {searchResult.buyer_phone} ({allBookings.length} total)
           </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                   {allBookings.map((booking, index) => (
-                    <div key={booking._id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div key={booking._id} className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                       {/* Header */}
-                      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3 sm:p-4 rounded-t-xl">
+                      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 sm:p-3 rounded-t-lg">
                         <div className="flex justify-between items-center">
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-bold text-sm sm:text-base truncate">
+                            <h4 className="font-bold text-xs sm:text-sm truncate">
                               {booking.pass_type_id?.name || 'Pass'}
                             </h4>
                             <p className="text-xs opacity-90 truncate">#{booking.booking_id || `NY2025-${booking._id?.slice(-6)}`}</p>
                           </div>
-                          <span className="text-xs bg-white/20 px-2 py-1 rounded flex-shrink-0 ml-2">NY 2025</span>
+                          <span className="text-xs bg-white/20 px-1 sm:px-2 py-1 rounded flex-shrink-0 ml-1 sm:ml-2">NY 2025</span>
                         </div>
                       </div>
                       
                       {/* Content */}
-                      <div className="p-3 sm:p-4">
-                        <div className="space-y-3 mb-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                            <div>
-                              <p className="text-gray-500 text-xs">Guest</p>
-                              <p className="font-semibold text-sm truncate">{booking.buyer_name}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500 text-xs">Phone</p>
-                              <p className="font-semibold text-sm">{booking.buyer_phone}</p>
-                            </div>
+                      <div className="p-2 sm:p-3">
+                        <div className="space-y-2 mb-3">
+                          <div>
+                            <p className="text-gray-500 text-xs">Guest</p>
+                            <p className="font-semibold text-xs sm:text-sm truncate">{booking.buyer_name}</p>
                           </div>
-                          
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                          <div>
+                            <p className="text-gray-500 text-xs">Phone</p>
+                            <p className="font-semibold text-xs sm:text-sm">{booking.buyer_phone}</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
                             <div>
                               <p className="text-gray-500 text-xs">Amount</p>
-                              <p className="font-semibold text-sm text-green-600">₹{booking.total_amount || booking.pass_type_id?.price || 0}</p>
+                              <p className="font-semibold text-xs sm:text-sm text-green-600">₹{booking.total_amount || booking.pass_type_id?.price || 0}</p>
                             </div>
                             <div>
                               <p className="text-gray-500 text-xs">Capacity</p>
-                              <p className="font-semibold text-sm">{booking.total_people || 1} people</p>
+                              <p className="font-semibold text-xs sm:text-sm">{booking.total_people || 1} people</p>
                             </div>
                           </div>
                         </div>
                         
-                        <div className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center">
-                          <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium text-center ${
+                        <div className="flex flex-col gap-1 sm:gap-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium text-center ${
                             (booking.people_entered || 0) >= (booking.total_people || 1)
                               ? 'bg-green-100 text-green-800'
                               : booking.people_entered > 0
@@ -436,7 +490,7 @@ const GateEntry = () => {
                           }`}>
                             {booking.people_entered || 0}/{booking.total_people || 1} entered
                           </span>
-                          <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium text-center ${
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium text-center ${
                             booking.payment_status === 'Paid' 
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-yellow-100 text-yellow-800'
@@ -446,15 +500,15 @@ const GateEntry = () => {
                         </div>
                         
                         {booking.payment_mode && (
-                          <div className="mt-3 pt-3 border-t border-gray-100">
-                            <p className="text-xs text-gray-500 text-center sm:text-left">
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <p className="text-xs text-gray-500 text-center">
                               <strong>Payment:</strong> {booking.payment_mode}
                             </p>
                           </div>
                         )}
                         
                         {/* Check-in Button for Individual Booking */}
-                        <div className="mt-3 pt-3 border-t border-gray-100">
+                        <div className="mt-2 pt-2 border-t border-gray-100">
                           {(booking.people_entered || 0) >= (booking.total_people || 1) ? (
                             <div className="text-center">
                               <span className="text-xs text-green-600 font-medium">✅ Fully Checked In</span>
@@ -471,7 +525,7 @@ const GateEntry = () => {
                                 setPeopleCount(1);
                                 handleCheckIn(false);
                               }}
-                              className="w-full bg-green-600 text-white py-2 sm:py-3 px-3 rounded-lg text-xs sm:text-sm hover:bg-green-700 font-medium transition-colors"
+                              className="w-full bg-green-600 text-white py-2 px-2 rounded-lg text-xs hover:bg-green-700 font-medium transition-colors"
                             >
                               Check In ({(booking.total_people || 1) - (booking.people_entered || 0)} available)
                             </button>
@@ -481,8 +535,8 @@ const GateEntry = () => {
                     </div>
                   ))}
                 </div>
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800">
+          <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-50 rounded-lg">
+            <p className="text-xs sm:text-sm text-blue-800">
               <strong>Summary:</strong> {allBookings.reduce((sum, b) => sum + (b.people_entered || 0), 0)} of {allBookings.reduce((sum, b) => sum + (b.total_people || 1), 0)} total people have entered across all bookings.
             </p>
           </div>
