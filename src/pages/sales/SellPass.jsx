@@ -23,10 +23,17 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
   const [newPassType, setNewPassType] = useState({ name: 'Teens', price: '', max_people: '', description: '' });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [nextBookingNumber, setNextBookingNumber] = useState('');
 
   useEffect(() => {
     loadPassTypes();
   }, []);
+
+  useEffect(() => {
+    if (formData.pass_type_id && passTypes.length > 0) {
+      fetchNextBookingNumber();
+    }
+  }, [formData.pass_type_id, passTypes]);
 
   useEffect(() => {
     if (editData && passTypes.length > 0) {
@@ -66,6 +73,49 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       setFormData(editFormData);
     }
   }, [editData, passTypes]);
+
+  const fetchNextBookingNumber = async () => {
+    try {
+      const selectedPassType = passTypes.find(p => p._id === formData.pass_type_id);
+      if (!selectedPassType) return;
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/bookings/next-number?passType=${selectedPassType.name}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setNextBookingNumber(data.nextNumber);
+      } else {
+        // Fallback - generate number locally
+        let startNumber;
+        switch (selectedPassType.name.toLowerCase()) {
+          case 'teens': startNumber = '2001'; break;
+          case 'couple': startNumber = '0001'; break;
+          case 'family': startNumber = '1001'; break;
+          default: startNumber = '0001';
+        }
+        setNextBookingNumber(startNumber);
+      }
+    } catch (error) {
+      console.error('Error fetching next booking number:', error);
+      // Fallback for network errors
+      const selectedPassType = passTypes.find(p => p._id === formData.pass_type_id);
+      if (selectedPassType) {
+        let startNumber;
+        switch (selectedPassType.name.toLowerCase()) {
+          case 'teens': startNumber = '2001'; break;
+          case 'couple': startNumber = '0001'; break;
+          case 'family': startNumber = '1001'; break;
+          default: startNumber = '0001';
+        }
+        setNextBookingNumber(startNumber);
+      }
+    }
+  };
 
   const loadPassTypes = async () => {
     try {
@@ -235,8 +285,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       const bookings = [booking];
       
       if (response.ok) {
-        const bookingId = booking.booking_id || `NY2025-${booking._id?.slice(-6) || 'XXXXXX'}`;
-        alert(`🎉 Booking created successfully!\n\nBooking ID: ${bookingId}\nCustomer: ${formData.buyer_name}\nPasses: ${formData.passes.length}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
+        const bookingId = booking.booking_id || booking.booking_number || `NY2025-${booking._id?.slice(-6) || 'XXXXXX'}`;
+        alert(`🎉 Booking created successfully!\n\nBooking Number: ${bookingId}\nCustomer: ${formData.buyer_name}\nPass Type: ${selectedPass.name}\nPasses: ${formData.passes.length}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
         
         resetForm();
         
@@ -321,6 +371,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                     pass_type_id: e.target.value,
                     passes: [{ people_count: selectedPassType?.name === 'Couple' ? 2 : selectedPassType?.name === 'Family' ? 5 : 1, buyer_details: {} }]
                   });
+                  setNextBookingNumber('');
                 }}
                 required
               >
@@ -331,16 +382,63 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                   </option>
                 ))}
               </select>
+              
+              {nextBookingNumber && (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">#</span>
+                    </div>
+                    <span className="text-sm font-medium text-blue-800">Next Booking Number:</span>
+                    <span className="text-lg font-bold text-blue-900">{nextBookingNumber}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {selectedPass && (
-              <div className="border-b border-gray-200 pb-6 mb-6">
-                <h3 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
-                  <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-sm">⚙️</span>
+              <>
+                {/* Customer Details Section - Moved to top */}
+                <div className="border-b border-gray-200 pb-6 mb-6">
+                  <h3 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white text-sm">👤</span>
+                    </div>
+                    Customer Details
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-3">Primary Customer Name *</label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full p-4 border-2 border-slate-300 rounded-xl text-base focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200"
+                        placeholder="Enter full name"
+                        value={formData.buyer_name}
+                        onChange={(e) => setFormData({...formData, buyer_name: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-3">Primary Mobile Number *</label>
+                      <input
+                        type="tel"
+                        required
+                        className="w-full p-4 border-2 border-slate-300 rounded-xl text-base focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200"
+                        placeholder="Enter mobile number"
+                        value={formData.buyer_phone}
+                        onChange={(e) => setFormData({...formData, buyer_phone: e.target.value})}
+                      />
+                    </div>
                   </div>
-                  Pass Configuration
-                </h3>
+                </div>
+
+                <div className="border-b border-gray-200 pb-6 mb-6">
+                  <h3 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white text-sm">⚙️</span>
+                    </div>
+                    Pass Configuration
+                  </h3>
                 
                 <div className="space-y-6">
                   {formData.passes.map((pass, index) => (
@@ -425,68 +523,10 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                   ))}
                 </div>
 
-                {/* Summary */}
-                <div className="mt-6 bg-gradient-to-r from-indigo-50 to-slate-50 p-6 rounded-xl border border-indigo-200">
-                  <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                    <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs">📊</span>
-                    </div>
-                    Order Summary
-                  </h4>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-white p-4 rounded-xl text-center shadow-sm">
-                      <div className="text-2xl font-bold text-indigo-600 mb-1">{formData.passes.length}</div>
-                      <div className="text-sm text-slate-600 font-medium">Total Passes</div>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl text-center shadow-sm">
-                      <div className="text-2xl font-bold text-indigo-600 mb-1">{totalPeople}</div>
-                      <div className="text-sm text-slate-600 font-medium">Total People</div>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl text-center shadow-sm">
-                      <div className="text-2xl font-bold text-emerald-600 mb-1">₹{currentPrice.toLocaleString()}</div>
-                      <div className="text-sm text-slate-600 font-medium">Per Pass</div>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl text-center shadow-sm border-2 border-emerald-200">
-                      <div className="text-3xl font-bold text-emerald-600 mb-1">₹{totalPrice.toLocaleString()}</div>
-                      <div className="text-sm text-slate-600 font-medium">Total Amount</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
-            <div className="border-b border-gray-200 pb-6 mb-6">
-              <h3 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">👤</span>
                 </div>
-                Customer Details
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">Primary Customer Name *</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full p-4 border-2 border-slate-300 rounded-xl text-base focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200"
-                    placeholder="Enter full name"
-                    value={formData.buyer_name}
-                    onChange={(e) => setFormData({...formData, buyer_name: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">Primary Mobile Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    className="w-full p-4 border-2 border-slate-300 rounded-xl text-base focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200"
-                    placeholder="Enter mobile number"
-                    value={formData.buyer_phone}
-                    onChange={(e) => setFormData({...formData, buyer_phone: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
+              </>
+            )}
 
             <div className="border-b border-gray-200 pb-6 mb-6">
               <label className="block text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">

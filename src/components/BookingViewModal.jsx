@@ -100,7 +100,7 @@ const BookingViewModal = ({ booking, onClose }) => {
               <div className="space-y-2">
                 <div>
                   <span className="text-xs text-gray-500">People</span>
-                  <p className="font-semibold text-gray-900">{booking.people_entered || 0}/{booking.total_people}</p>
+                  <p className="font-semibold text-gray-900">{booking.total_people}</p>
                 </div>
                 <div>
                   <span className="text-xs text-gray-500">Check-in</span>

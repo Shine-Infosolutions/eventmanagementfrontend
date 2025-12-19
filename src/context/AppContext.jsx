@@ -55,6 +55,11 @@ const AppContextProvider = ({ children }) => {
   useEffect(() => {
     const savedBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
     setBookings(savedBookings);
+    
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
   }, []);
 
   const addBooking = (bookingData) => {

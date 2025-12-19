@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { MdDashboard, MdConfirmationNumber, MdList, MdLogin, MdExitToApp } from 'react-icons/md';
+import { MdDashboard, MdConfirmationNumber, MdList, MdLogin, MdExitToApp, MdPeople } from 'react-icons/md';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate();
@@ -10,15 +10,15 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const menuItems = {
     Admin: [
       { id: 'dashboard', label: 'Dashboard', icon: MdDashboard, path: '/dashboard' },
+      { id: 'users', label: 'User Management', icon: MdPeople, path: '/users' },
       { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
       { id: 'manage-pass-types', label: 'Manage Pass Types', icon: () => <span className="text-lg">🎫</span>, path: '/manage-pass-types' },
       { id: 'bookings', label: 'All Bookings', icon: MdList, path: '/bookings' },
       { id: 'gate', label: 'Gate Entry', icon: MdLogin, path: '/gate-entry' },
     ],
     'Sales Staff': [
-      // { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
-      // { id: 'sell-list', label: 'My Sales', icon: MdList, path: '/sell-pass-list' },
-      { id: 'bookings', label: 'All Bookings', icon: MdList, path: '/bookings' },
+      { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
+      { id: 'bookings', label: 'Bookings List', icon: MdList, path: '/bookings' },
     ],
     'Gate Staff': [
       { id: 'gate', label: 'Gate Entry', icon: MdLogin, path: '/gate-entry' },

@@ -6,6 +6,7 @@ import Header from './components/Header';
 import Dashboard from './pages/admin/Dashboard';
 import CreatePassType from './pages/admin/CreatePassType';
 import ManagePassTypes from './pages/admin/ManagePassTypes';
+import UserManagement from './pages/admin/UserManagement';
 import SharedPass from './pages/shared/SharedPass';
 import SellPass from './pages/sales/SellPass';
 import SellPassList from './pages/sales/SellPassList';
@@ -124,6 +125,24 @@ const App = () => {
                   </div>
                   <main className="flex-1 overflow-y-auto lg:ml-64">
                     <ManagePassTypes />
+                  </main>
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <div className="flex h-screen bg-gray-100">
+                <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <div className="lg:hidden">
+                    <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+                  </div>
+                  <main className="flex-1 overflow-y-auto lg:ml-64">
+                    <UserManagement />
                   </main>
                 </div>
               </div>

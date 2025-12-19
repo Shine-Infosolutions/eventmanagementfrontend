@@ -171,7 +171,8 @@ const BookingList = () => {
       filtered = filtered.filter(booking =>
         booking.buyer_name?.toLowerCase().includes(filters.search.toLowerCase()) ||
         booking.buyer_phone?.includes(filters.search) ||
-        booking.booking_id?.toLowerCase().includes(filters.search.toLowerCase())
+        booking.booking_id?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        booking.booking_number?.toLowerCase().includes(filters.search.toLowerCase())
       );
     }
 
@@ -254,7 +255,7 @@ const BookingList = () => {
             <Button 
               onClick={() => {
                 const excelData = filteredBookings.map(booking => ({
-                  'Booking ID': booking.booking_id,
+                  'Booking Number': booking.booking_id || booking.booking_number,
                   'Customer Name': booking.buyer_name,
                   'Phone': booking.buyer_phone,
                   'Pass Types': booking.passes ? booking.passes.map(p => p.pass_type_name).join(', ') : booking.pass_type_id?.name,
@@ -383,7 +384,7 @@ const BookingList = () => {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3">
                     <div className="mb-2 sm:mb-0">
                       <div className="font-medium text-gray-900 text-sm">{booking.booking_id}</div>
-                      <div className="text-xs text-gray-500">People: {booking.total_people_entered || booking.people_entered || 0}/{booking.total_people}</div>
+                      <div className="text-xs text-gray-500">People: {booking.total_people}</div>
                     </div>
                     <div className="self-start">{getStatusBadge(booking)}</div>
                   </div>
@@ -449,7 +450,7 @@ const BookingList = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking Number</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Buyer Info</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pass Type</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
@@ -464,7 +465,7 @@ const BookingList = () => {
                       <tr key={booking._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{booking.booking_id}</div>
-                          <div className="text-xs text-gray-500">People: {booking.total_people_entered || booking.people_entered || 0}/{booking.total_people}</div>
+                          <div className="text-xs text-gray-500">People: {booking.total_people}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>

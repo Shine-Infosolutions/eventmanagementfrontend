@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import Logo from '../../assets/Logo.png';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://eventbackend-pi.vercel.app';
 
@@ -45,7 +46,7 @@ const SharedPass = () => {
           paymentMode: booking.payment_mode,
           createdAt: booking.createdAt,
           qrCode: `QR-${booking.booking_id}-${Date.now()}`,
-          eventName: 'New Year 2025 Event'
+          eventName: 'CELESTIAL DAWN'
         });
       } catch (error) {
         setError('Pass not found or expired');
@@ -97,25 +98,16 @@ const SharedPass = () => {
   return (
     <>
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Print Button */}
-      <div className="no-print p-2 sm:p-4 flex justify-end gap-2 sm:gap-3">
-        <button 
-          onClick={handlePrint}
-          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 shadow-md transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-          </svg>
-          Print Pass
-        </button>
-      </div>
+
 
       <div className="print-content max-w-4xl mx-auto p-2 sm:p-4 lg:p-6 xl:p-8">
         {/* Pass Container */}
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
           
           {/* Pass Header */}
-          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white p-3 sm:p-6 lg:p-8">
+          <div className="bg-gradient-to-r from-amber-600 via-yellow-700 to-amber-800 text-white p-3 sm:p-6 lg:p-8">
+
+            
             <div className="flex flex-col lg:flex-row justify-between items-center gap-3 sm:gap-6">
               <div className="text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
@@ -123,16 +115,35 @@ const SharedPass = () => {
                     <span className="text-2xl">🎉</span>
                   </div>
                   <div>
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-wide">EVENT PASS</h1>
-                    <div className="w-16 h-1 bg-yellow-400 rounded-full mt-1"></div>
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-wide">CELESTIAL DAWN</h1>
+                    <div className="w-16 h-1 bg-amber-300 rounded-full mt-1"></div>
                   </div>
                 </div>
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2">{passData.eventName}</h2>
-                <div className="flex items-center justify-center lg:justify-start gap-2 text-blue-100">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm">Event Bookings Date</span>
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2">EVENT PASS</h2>
+                <div className="text-center lg:text-left">
+                  <div className="flex items-center justify-center lg:justify-start gap-2 text-amber-100 mb-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-lg font-semibold">8:00 PM</span>
+                  </div>
+                  <div className="flex items-center justify-center lg:justify-start gap-2 text-amber-100">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm">31 DECEMBER WEDNESDAY</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Logo in center */}
+              <div className="flex justify-start items-start flex-1 -mt-2 pl-8">
+                <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-sm">
+                  <img 
+                    src={Logo} 
+                    alt="Event Logo" 
+                    className="h-20 sm:h-24 lg:h-28 w-auto object-contain"
+                  />
                 </div>
               </div>
               
@@ -141,7 +152,7 @@ const SharedPass = () => {
                   🎫
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-blue-200 uppercase tracking-wide font-medium">Pass ID</p>
+                  <p className="text-xs text-amber-200 uppercase tracking-wide font-medium">Pass ID</p>
                   <p className="text-sm sm:text-lg lg:text-xl font-bold font-mono bg-white/20 px-2 sm:px-3 py-1 rounded-lg mt-1">{passData.passId}</p>
                 </div>
               </div>
@@ -153,10 +164,10 @@ const SharedPass = () => {
             
             {/* Pass Holder Info */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-              <div className="bg-gray-50 rounded-xl p-3 sm:p-4 lg:p-6">
+              <div className="bg-amber-50 rounded-xl p-3 sm:p-4 lg:p-6 border border-amber-200">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                     </svg>
                   </div>
@@ -173,7 +184,7 @@ const SharedPass = () => {
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-gray-200">
                     <span className="text-gray-600 font-medium">Pass Type</span>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">{passData.passType}</span>
+                    <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold">{passData.passType}</span>
                   </div>
                   <div className="flex justify-between items-center py-2">
                     <span className="text-gray-600 font-medium">People Allowed</span>
@@ -182,10 +193,10 @@ const SharedPass = () => {
                 </div>
               </div>
               
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 sm:p-4 lg:p-6 border border-green-200">
+              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-3 sm:p-4 lg:p-6 border border-amber-200">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
                     </svg>
                   </div>
@@ -215,9 +226,9 @@ const SharedPass = () => {
             </div>
 
             {/* Pass Details Section */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg p-4 border border-amber-200">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-green-600">🎫</span>
+                <span className="text-amber-600">🎫</span>
                 <h3 className="text-sm font-bold text-gray-800">Pass Details</h3>
               </div>
               
@@ -233,36 +244,50 @@ const SharedPass = () => {
               </div>
             </div>
 
-            {/* Important Information */}
-            <div className="mt-6 sm:mt-8 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-3 sm:p-4 lg:p-6 border border-amber-200">
+            {/* Terms & Conditions */}
+            <div className="mt-6 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-4 sm:p-6 border border-amber-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
                   <svg className="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-gray-800">Important Instructions</h3>
+                <h3 className="text-xl font-bold text-amber-800 tracking-wider">TERMS & CONDITIONS</h3>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="space-y-2">
-                  <p className="flex items-start gap-2">
-                    <span className="text-amber-600 font-bold">•</span>
-                    <span>Carry a valid government ID along with this pass</span>
+              <div className="space-y-2 text-sm text-gray-700">
+                <p className="flex items-start gap-3">
+                  <span className="text-amber-600 font-bold">▶</span>
+                  <span>DRINKS TO BE PURCHASED AT THE COUNTER</span>
+                </p>
+                <p className="flex items-start gap-3">
+                  <span className="text-amber-600 font-bold">▶</span>
+                  <span>NO OUTSIDE FOOD AND DRINKS ALLOWED</span>
+                </p>
+                <p className="flex items-start gap-3">
+                  <span className="text-amber-600 font-bold">▶</span>
+                  <span>ENTRY WOULD BE PERMITTED ONLY WITH PASSES</span>
+                </p>
+                <p className="flex items-start gap-3">
+                  <span className="text-amber-600 font-bold">▶</span>
+                  <span>VALID ID CARD IS REQUIRED FOR ENTRY</span>
+                </p>
+                <p className="flex items-start gap-3">
+                  <span className="text-amber-600 font-bold">▶</span>
+                  <span>THE TICKET IS NON REPLACEABLE AND NON REFUNDABLE</span>
+                </p>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-amber-300">
+                <h4 className="text-amber-800 font-bold text-base mb-3">CALL OR WHATSAPP US:</h4>
+                <div className="space-y-2 text-sm text-gray-700">
+                  <p className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-amber-600 rounded-full"></span>
+                    <span>+918795266667, 7752946667, 8052866667, 8795566667</span>
                   </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-amber-600 font-bold">•</span>
-                    <span>Pass is valid only for the specified number of people</span>
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <p className="flex items-start gap-2">
-                    <span className="text-amber-600 font-bold">•</span>
-                    <span>Entry is subject to security checks</span>
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-amber-600 font-bold">•</span>
-                    <span>Pass cannot be transferred or refunded</span>
+                  <p className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-amber-600 rounded-full"></span>
+                    <span>H.N. SINGH CHAURAHA, MEDICAL COLLEGE ROAD, GORAKHPUR</span>
                   </p>
                 </div>
               </div>
@@ -271,7 +296,7 @@ const SharedPass = () => {
         </div>
 
           {/* Pass Footer */}
-          <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-3 sm:p-6 lg:p-8 text-center">
+          <div className="bg-gradient-to-r from-amber-800 to-yellow-900 text-white p-3 sm:p-6 lg:p-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
               <span className="text-2xl">🎊</span>
               <h3 className="text-lg sm:text-xl lg:text-2xl font-bold">Welcome to {passData.eventName}!</h3>
