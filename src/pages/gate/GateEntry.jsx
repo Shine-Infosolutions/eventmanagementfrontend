@@ -297,7 +297,7 @@ const GateEntry = () => {
           </div>
         ) : (
           <p className="text-gray-500 text-center py-8">
-            {searchTerm ? 'No bookings found matching your search.' : 'Loading bookings...'}
+            {searchTerm ? 'No bookings found matching your search.' : (allBookings.length === 0 ? 'Loading bookings...' : 'No bookings available.')}
           </p>
         )}
       </div>

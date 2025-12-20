@@ -6,6 +6,7 @@ import SellPass from '../sales/SellPass';
 import BookingForm from './BookingForm';
 import EditBookingForm from './EditBookingForm';
 import BookingViewModal from '../../components/BookingViewModal';
+import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -98,10 +99,14 @@ const BookingList = () => {
         }
       });
       if (response.ok) {
+        toast.success('Booking deleted successfully');
         loadBookings();
+      } else {
+        toast.error('Failed to delete booking');
       }
     } catch (error) {
       console.error('Error deleting booking:', error);
+      toast.error('Error deleting booking');
     }
   };
 
@@ -440,6 +445,14 @@ const BookingList = () => {
                     >
                       Send Pass
                     </button>
+                    {user.role === 'Admin' && (
+                      <button
+                        onClick={() => deleteBooking(booking._id)}
+                        className="px-3 py-2 bg-red-100 text-red-800 rounded text-sm hover:bg-red-200"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -543,6 +556,14 @@ const BookingList = () => {
                             >
                               Send Pass
                             </button>
+                            {user.role === 'Admin' && (
+                              <button
+                                onClick={() => deleteBooking(booking._id)}
+                                className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs hover:bg-red-200"
+                              >
+                                Delete
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

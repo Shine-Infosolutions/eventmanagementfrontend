@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import AppContextProvider from './context/AppContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -19,6 +20,7 @@ const App = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <AppContextProvider>
+      <Toaster position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/pass/:id" element={<SharedPass />} />
