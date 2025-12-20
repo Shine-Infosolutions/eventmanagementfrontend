@@ -105,55 +105,45 @@ const SharedPass = () => {
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
           
           {/* Pass Header */}
-          <div className="bg-gradient-to-r from-amber-600 via-yellow-700 to-amber-800 text-white p-3 sm:p-6 lg:p-8">
-
-            
-            <div className="flex flex-col lg:flex-row justify-between items-center gap-3 sm:gap-6">
-              <div className="text-center lg:text-left">
-                <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                    <span className="text-2xl">🎉</span>
+          <div className="bg-gradient-to-r from-amber-600 via-yellow-700 to-amber-800 text-white p-6">
+            <div className="flex items-center gap-4">
+              {/* Logo on Left */}
+              <div className="bg-white/10 rounded-xl p-2 backdrop-blur-sm flex flex-col items-center">
+                <img 
+                  src={Logo} 
+                  alt="Event Logo" 
+                  className="h-16 w-auto object-contain"
+                />
+                <p className="text-white text-xs font-semibold mt-1">BUDHA AVENUE</p>
+              </div>
+              
+              {/* Event Details on Right */}
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                    <span className="text-lg">🎉</span>
                   </div>
                   <div>
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-wide">CELESTIAL DAWN</h1>
-                    <div className="w-16 h-1 bg-amber-300 rounded-full mt-1"></div>
+                    <h1 className="text-xl font-bold tracking-wide">CELESTIAL DAWN</h1>
+                    <div className="w-12 h-0.5 bg-amber-300 rounded-full mt-1"></div>
                   </div>
                 </div>
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2">EVENT PASS</h2>
-                <div className="text-center lg:text-left">
-                  <div className="flex items-center justify-center lg:justify-start gap-2 text-amber-100 mb-1">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                
+                <h2 className="text-lg font-semibold mb-2">EVENT PASS</h2>
+                
+                <div className="flex items-center gap-4 text-amber-100 text-sm">
+                  <div className="flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                     </svg>
-                    <span className="text-lg font-semibold">8:00 PM</span>
+                    <span className="font-semibold">8:00 PM</span>
                   </div>
-                  <div className="flex items-center justify-center lg:justify-start gap-2 text-amber-100">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                     </svg>
-                    <span className="text-sm">31 DECEMBER WEDNESDAY</span>
+                    <span>31 DECEMBER WEDNESDAY</span>
                   </div>
-                </div>
-              </div>
-              
-              {/* Logo in center */}
-              <div className="flex justify-start items-start flex-1 -mt-2 pl-8">
-                <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-sm">
-                  <img 
-                    src={Logo} 
-                    alt="Event Logo" 
-                    className="h-20 sm:h-24 lg:h-28 w-auto object-contain"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-xl p-2 sm:p-4">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-white/20 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 border-2 border-white/30">
-                  🎫
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-amber-200 uppercase tracking-wide font-medium">Pass ID</p>
-                  <p className="text-sm sm:text-lg lg:text-xl font-bold font-mono bg-white/20 px-2 sm:px-3 py-1 rounded-lg mt-1">{passData.passId}</p>
                 </div>
               </div>
             </div>
@@ -325,7 +315,9 @@ const SharedPass = () => {
             </div>
             
             <div className="mt-6 pt-4 border-t border-gray-700">
-              <p className="text-gray-400 text-xs">Generated on {new Date().toLocaleDateString()} • Event Management System</p>
+              <p className="text-gray-400 text-xs text-center">
+                Generated on {new Date().toLocaleDateString()} • Powered by <a href="https://www.shineinfosolutions.in/" target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">Shine Infosolution</a>
+              </p>
             </div>
           </div>
         </div>

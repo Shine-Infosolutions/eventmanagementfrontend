@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -23,17 +24,10 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
   const [newPassType, setNewPassType] = useState({ name: 'Teens', price: '', max_people: '', description: '' });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [nextBookingNumber, setNextBookingNumber] = useState('');
 
   useEffect(() => {
     loadPassTypes();
   }, []);
-
-  useEffect(() => {
-    if (formData.pass_type_id && passTypes.length > 0) {
-      fetchNextBookingNumber();
-    }
-  }, [formData.pass_type_id, passTypes]);
 
   useEffect(() => {
     if (editData && passTypes.length > 0) {
@@ -74,49 +68,6 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
     }
   }, [editData, passTypes]);
 
-  const fetchNextBookingNumber = async () => {
-    try {
-      const selectedPassType = passTypes.find(p => p._id === formData.pass_type_id);
-      if (!selectedPassType) return;
-
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/bookings/next-number?passType=${selectedPassType.name}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setNextBookingNumber(data.nextNumber);
-      } else {
-        // Fallback - generate number locally
-        let startNumber;
-        switch (selectedPassType.name.toLowerCase()) {
-          case 'teens': startNumber = '2001'; break;
-          case 'couple': startNumber = '0001'; break;
-          case 'family': startNumber = '1001'; break;
-          default: startNumber = '0001';
-        }
-        setNextBookingNumber(startNumber);
-      }
-    } catch (error) {
-      console.error('Error fetching next booking number:', error);
-      // Fallback for network errors
-      const selectedPassType = passTypes.find(p => p._id === formData.pass_type_id);
-      if (selectedPassType) {
-        let startNumber;
-        switch (selectedPassType.name.toLowerCase()) {
-          case 'teens': startNumber = '2001'; break;
-          case 'couple': startNumber = '0001'; break;
-          case 'family': startNumber = '1001'; break;
-          default: startNumber = '0001';
-        }
-        setNextBookingNumber(startNumber);
-      }
-    }
-  };
-
   const loadPassTypes = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -136,7 +87,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
           setFormData(prev => ({ 
             ...prev, 
             pass_type_id: firstType._id,
-            passes: [{ people_count: firstType.name === 'Couple' ? 2 : firstType.name === 'Family' ? 5 : 1, buyer_details: {} }]
+            passes: [{ people_count: firstType.name === 'Couple' ? 2 : firstType.name === 'Family' ? 4 : 1, buyer_details: {} }]
           }));
         }
       }
@@ -147,8 +98,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
   const addPass = () => {
     const selectedPass = passTypes.find(p => p._id === formData.pass_type_id);
-    const defaultPeopleCount = selectedPass?.name === 'Couple' ? 2 : selectedPass?.name === 'Family' ? 5 : 1;
-    const defaultMaxPeople = selectedPass?.name === 'Family' ? 5 : selectedPass?.max_people || 2;
+    const defaultPeopleCount = selectedPass?.name === 'Couple' ? 2 : selectedPass?.name === 'Family' ? 4 : 1;
+    const defaultMaxPeople = selectedPass?.name === 'Family' ? 4 : selectedPass?.max_people || 2;
     setFormData({
       ...formData,
       passes: [...formData.passes, { 
@@ -221,7 +172,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
           console.log('Upload successful:', paymentScreenshotUrl);
         } catch (error) {
           console.error('Upload failed:', error);
-          alert('Image upload failed: ' + error.message);
+          toast.error('Image upload failed: ' + error.message);
         }
         setUploading(false);
       } else {
@@ -281,27 +232,26 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         throw new Error(responseData.message || 'Failed to create booking');
       }
       
-      const booking = responseData;
-      const bookings = [booking];
+      toast.success(`🎉 Booking created successfully!\n\nCustomer: ${formData.buyer_name}\nPass Type: ${selectedPass.name}\nPasses: ${formData.passes.length}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`, {
+        duration: 6000,
+        style: {
+          minWidth: '400px',
+        },
+      });
       
-      if (response.ok) {
-        const bookingId = booking.booking_id || booking.booking_number || `NY2025-${booking._id?.slice(-6) || 'XXXXXX'}`;
-        alert(`🎉 Booking created successfully!\n\nBooking Number: ${bookingId}\nCustomer: ${formData.buyer_name}\nPass Type: ${selectedPass.name}\nPasses: ${formData.passes.length}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`);
-        
-        resetForm();
-        
-        if (onBookingCreated) {
-          onBookingCreated();
-        }
-        if (onClose) {
-          onClose();
-        }
-        setTimeout(() => {
-          navigate('/bookings');
-        }, 100);
+      resetForm();
+      
+      if (onBookingCreated) {
+        onBookingCreated();
       }
+      if (onClose) {
+        onClose();
+      }
+      setTimeout(() => {
+        navigate('/bookings');
+      }, 2000);
     } catch (error) {
-      alert('❌ Error: ' + error.message);
+      toast.error('❌ Error: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -319,7 +269,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       pass_type_id: firstPassType?._id || '',
       buyer_name: '',
       buyer_phone: '',
-      passes: [{ people_count: firstPassType?.name === 'Couple' ? 2 : firstPassType?.name === 'Family' ? 5 : 1, buyer_details: {} }],
+      passes: [{ people_count: firstPassType?.name === 'Couple' ? 2 : firstPassType?.name === 'Family' ? 4 : 1, buyer_details: {} }],
       payment_mode: 'Cash',
       payment_status: 'Paid',
       custom_price: '',
@@ -338,6 +288,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
   return (
     <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+      <Toaster position="top-right" />
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex items-center gap-4 mb-4">
@@ -369,9 +320,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                   setFormData({
                     ...formData, 
                     pass_type_id: e.target.value,
-                    passes: [{ people_count: selectedPassType?.name === 'Couple' ? 2 : selectedPassType?.name === 'Family' ? 5 : 1, buyer_details: {} }]
+                    passes: [{ people_count: selectedPassType?.name === 'Couple' ? 2 : selectedPassType?.name === 'Family' ? 4 : 1, buyer_details: {} }]
                   });
-                  setNextBookingNumber('');
                 }}
                 required
               >
@@ -382,18 +332,6 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                   </option>
                 ))}
               </select>
-              
-              {nextBookingNumber && (
-                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs">#</span>
-                    </div>
-                    <span className="text-sm font-medium text-blue-800">Next Booking Number:</span>
-                    <span className="text-lg font-bold text-blue-900">{nextBookingNumber}</span>
-                  </div>
-                </div>
-              )}
             </div>
 
             {selectedPass && (
@@ -470,7 +408,6 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                             <input
                               type="number"
                               min="1"
-                              max={selectedPass.max_people}
                               className="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 text-lg font-semibold"
                               value={pass.people_count}
                               onChange={(e) => updatePass(index, 'people_count', parseInt(e.target.value) || 1)}

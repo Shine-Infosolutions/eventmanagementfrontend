@@ -423,10 +423,10 @@ const BookingList = () => {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <button
-                      onClick={() => setViewingBooking(booking)}
+                      onClick={() => navigate(`/pass/${booking._id}`)}
                       className="px-3 py-2 bg-blue-100 text-blue-800 rounded text-sm hover:bg-blue-200"
                     >
-                      View
+                      View Pass
                     </button>
                     <button
                       onClick={() => setEditingBooking(booking)}
@@ -526,10 +526,10 @@ const BookingList = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-1">
                             <button
-                              onClick={() => setViewingBooking(booking)}
+                              onClick={() => navigate(`/pass/${booking._id}`)}
                               className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs hover:bg-blue-200"
                             >
-                              View
+                              View Pass
                             </button>
                             <button
                               onClick={() => setEditingBooking(booking)}

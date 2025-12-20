@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { MdAdd, MdPerson, MdEmail, MdPhone, MdWork } from 'react-icons/md';
+import { MdAdd, MdPerson, MdEmail, MdPhone, MdEdit, MdDelete, MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import toast, { Toaster } from 'react-hot-toast';
 import Modal from '../../components/Modal';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
@@ -10,6 +11,8 @@ const UserManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
+  const [editingUser, setEditingUser] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,7 +42,7 @@ const UserManagement = () => {
         setUsers(data);
       } else {
         const error = await response.json();
-        alert(`Error: ${error.message || 'Failed to fetch users'}`);
+        toast.error(error.message || 'Failed to fetch users');
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -54,27 +57,73 @@ const UserManagement = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/users`, {
-        method: 'POST',
+      const url = editingUser 
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/users/${editingUser._id}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/users`;
+      
+      const body = editingUser && !formData.password 
+        ? { name: formData.name, email: formData.email, mobile: formData.mobile, role: formData.role }
+        : formData;
+
+      const response = await fetch(url, {
+        method: editingUser ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(body)
       });
 
       if (response.ok) {
         setShowModal(false);
+        setEditingUser(null);
         setFormData({ name: '', email: '', mobile: '', password: '', role: 'Sales Staff' });
         fetchUsers();
+        toast.success(editingUser ? 'User updated successfully!' : 'User created successfully!');
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to create user');
+        toast.error(error.message || `Failed to ${editingUser ? 'update' : 'create'} user`);
       }
     } catch (error) {
-      alert('Error creating user');
+      toast.error(`Error ${editingUser ? 'updating' : 'creating'} user`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEdit = (user) => {
+    setEditingUser(user);
+    setFormData({
+      name: user.name,
+      email: user.email || '',
+      mobile: user.mobile || '',
+      password: '',
+      role: user.role
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (userId) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        fetchUsers();
+        toast.success('User deleted successfully!');
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to delete user');
+      }
+    } catch (error) {
+      toast.error('Error deleting user');
     }
   };
 
@@ -89,9 +138,14 @@ const UserManagement = () => {
 
   return (
     <div className="p-6">
+      <Toaster position="top-right" />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-        <Button onClick={() => setShowModal(true)} className="flex items-center gap-2">
+        <Button onClick={() => {
+          setEditingUser(null);
+          setFormData({ name: '', email: '', mobile: '', password: '', role: 'Sales Staff' });
+          setShowModal(true);
+        }} className="flex items-center gap-2">
           <MdAdd /> Add User
         </Button>
       </div>
@@ -111,23 +165,29 @@ const UserManagement = () => {
                   Role
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Password
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {fetchLoading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                     Loading users...
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                     No users found
                   </td>
                 </tr>
@@ -162,6 +222,11 @@ const UserManagement = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm text-gray-900 font-mono">
+                      {user.plain_password || 'N/A'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
@@ -171,6 +236,22 @@ const UserManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => handleEdit(user)}
+                      className="text-blue-600 hover:text-blue-900 mr-3"
+                      title="Edit user"
+                    >
+                      <MdEdit className="inline text-lg" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(user._id)}
+                      className="text-red-600 hover:text-red-900"
+                      title="Delete user"
+                    >
+                      <MdDelete className="inline text-lg" />
+                    </button>
+                  </td>
                 </tr>
               ))
               )}
@@ -179,7 +260,11 @@ const UserManagement = () => {
         </div>
       </Card>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add New User">
+      <Modal isOpen={showModal} onClose={() => {
+        setShowModal(false);
+        setEditingUser(null);
+        setFormData({ name: '', email: '', mobile: '', password: '', role: 'Sales Staff' });
+      }} title={editingUser ? 'Edit User' : 'Add New User'}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Full Name"
@@ -198,20 +283,28 @@ const UserManagement = () => {
           />
           
           <Input
-            label="Mobile"
+            label="Mobile (Optional)"
             type="tel"
             value={formData.mobile}
             onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-            required
           />
           
-          <Input
-            label="Password"
-            type="password"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            required
-          />
+          <div className="relative">
+            <Input
+              label={editingUser ? 'Password (leave blank to keep current)' : 'Password'}
+              type={showPassword ? 'text' : 'password'}
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              required={!editingUser}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-9 text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
+            </button>
+          </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -229,12 +322,16 @@ const UserManagement = () => {
           
           <div className="flex gap-3 pt-4">
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Creating...' : 'Create User'}
+              {loading ? (editingUser ? 'Updating...' : 'Creating...') : (editingUser ? 'Update User' : 'Create User')}
             </Button>
             <Button 
               type="button" 
               variant="secondary" 
-              onClick={() => setShowModal(false)}
+              onClick={() => {
+                setShowModal(false);
+                setEditingUser(null);
+                setFormData({ name: '', email: '', mobile: '', password: '', role: 'Sales Staff' });
+              }}
               className="flex-1"
             >
               Cancel
