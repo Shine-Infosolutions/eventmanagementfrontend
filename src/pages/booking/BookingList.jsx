@@ -388,8 +388,21 @@ const BookingList = () => {
                 <div key={booking._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3">
                     <div className="mb-2 sm:mb-0">
-                      <div className="font-medium text-gray-900 text-sm">{booking.booking_id}</div>
+                      <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
+                        {booking.booking_id}
+                        {booking.is_owner_pass && (
+                          <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold flex items-center gap-1">
+                            <span>👑</span>
+                            Owner
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500">People: {booking.total_people}</div>
+                      {booking.payment_notes && (
+                        <div className="text-xs text-blue-600 mt-1">
+                          💳 {booking.payment_notes}
+                        </div>
+                      )}
                     </div>
                     <div className="self-start">{getStatusBadge(booking)}</div>
                   </div>
@@ -426,12 +439,18 @@ const BookingList = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <button
                       onClick={() => navigate(`/pass/${booking._id}`)}
                       className="px-3 py-2 bg-blue-100 text-blue-800 rounded text-sm hover:bg-blue-200"
                     >
                       View Pass
+                    </button>
+                    <button
+                      onClick={() => setViewingBooking(booking)}
+                      className="px-3 py-2 bg-purple-100 text-purple-800 rounded text-sm hover:bg-purple-200"
+                    >
+                      Details
                     </button>
                     <button
                       onClick={() => setEditingBooking(booking)}
@@ -448,7 +467,7 @@ const BookingList = () => {
                     {user.role === 'Admin' && (
                       <button
                         onClick={() => deleteBooking(booking._id)}
-                        className="px-3 py-2 bg-red-100 text-red-800 rounded text-sm hover:bg-red-200"
+                        className="px-3 py-2 bg-red-100 text-red-800 rounded text-sm hover:bg-red-200 col-span-2 sm:col-span-1"
                       >
                         Delete
                       </button>
@@ -477,7 +496,15 @@ const BookingList = () => {
                     {filteredBookings.map((booking) => (
                       <tr key={booking._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{booking.booking_id}</div>
+                          <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                            {booking.booking_id}
+                            {booking.is_owner_pass && (
+                              <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold flex items-center gap-1">
+                                <span>👑</span>
+                                Owner
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-gray-500">People: {booking.total_people}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -510,7 +537,11 @@ const BookingList = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getPaymentModeBadge(booking.payment_mode)}
-                          {booking.notes && <div className="text-xs text-gray-500 mt-1">{booking.notes}</div>}
+                          {booking.payment_notes && (
+                            <div className="text-xs text-blue-600 mt-1 max-w-xs truncate" title={booking.payment_notes}>
+                              💳 {booking.payment_notes}
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -543,6 +574,12 @@ const BookingList = () => {
                               className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs hover:bg-blue-200"
                             >
                               View Pass
+                            </button>
+                            <button
+                              onClick={() => setViewingBooking(booking)}
+                              className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs hover:bg-purple-200"
+                            >
+                              Details
                             </button>
                             <button
                               onClick={() => setEditingBooking(booking)}
@@ -597,6 +634,7 @@ const BookingList = () => {
       <BookingViewModal 
         booking={viewingBooking} 
         onClose={() => setViewingBooking(null)} 
+        onUpdate={loadBookings}
       />
       
       {/* Edit Booking Modal */}

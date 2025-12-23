@@ -46,7 +46,10 @@ const SharedPass = () => {
           paymentMode: booking.payment_mode,
           createdAt: booking.createdAt,
           qrCode: `QR-${booking.booking_id}-${Date.now()}`,
-          eventName: 'CELESTIAL DAWN'
+          eventName: 'CELESTIAL DAWN',
+          notes: booking.notes,
+          paymentNotes: booking.payment_notes,
+          isOwnerPass: booking.is_owner_pass
         });
       } catch (error) {
         setError('Pass not found or expired');
@@ -98,6 +101,16 @@ const SharedPass = () => {
   return (
     <>
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* Back Button */}
+      <div className="p-4">
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors no-print"
+        >
+          <span>←</span>
+          Back
+        </button>
+      </div>
 
 
       <div className="print-content max-w-4xl mx-auto p-2 sm:p-4 lg:p-6 xl:p-8">
@@ -124,7 +137,9 @@ const SharedPass = () => {
                     <span className="text-lg">🎉</span>
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold tracking-wide">CELESTIAL DAWN</h1>
+                    <h1 className="text-xl font-bold tracking-wide">
+                      CELESTIAL DAWN
+                    </h1>
                     <div className="w-12 h-0.5 bg-amber-300 rounded-full mt-1"></div>
                   </div>
                 </div>
@@ -231,6 +246,28 @@ const SharedPass = () => {
                   <span className="text-gray-600 text-sm">People Allowed</span>
                   <span className="font-semibold text-gray-900 text-sm">{passData.maxPeople}</span>
                 </div>
+                {(passData.notes || passData.paymentNotes) && (
+                  <div className="pt-2 border-t border-amber-200">
+                    {passData.notes && (
+                      <div className="flex items-start gap-2 mb-2">
+                        <span className="text-amber-600 text-sm">📝</span>
+                        <div>
+                          <span className="text-gray-600 text-sm font-medium">Notes:</span>
+                          <p className="text-gray-900 text-sm mt-1">{passData.notes}</p>
+                        </div>
+                      </div>
+                    )}
+                    {passData.paymentNotes && (
+                      <div className="flex items-start gap-2">
+                        <span className="text-amber-600 text-sm">💳</span>
+                        <div>
+                          <span className="text-gray-600 text-sm font-medium">Payment Notes:</span>
+                          <p className="text-gray-900 text-sm mt-1">{passData.paymentNotes}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

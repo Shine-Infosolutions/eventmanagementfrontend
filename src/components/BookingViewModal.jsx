@@ -1,7 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-const BookingViewModal = ({ booking, onClose }) => {
+const BookingViewModal = ({ booking, onClose, onUpdate }) => {
+  const [notes, setNotes] = useState(booking?.notes || '');
+  const [paymentNotes, setPaymentNotes] = useState(booking?.payment_notes || `${booking?.total_people || 1} pass booked. ${booking?.payment_mode || 'Cash'} payment received`);
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [isEditingPaymentNotes, setIsEditingPaymentNotes] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Update notes when booking changes
+  useEffect(() => {
+    if (booking?.notes) {
+      setNotes(booking.notes);
+    }
+    if (booking?.payment_notes) {
+      setPaymentNotes(booking.payment_notes);
+    }
+  }, [booking]);
+  
   if (!booking) return null;
+
+  const handleSaveNotes = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch(`http://localhost:5000/api/bookings/${booking._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ notes })
+      });
+      if (response.ok) {
+        setIsEditingNotes(false);
+        if (onUpdate) onUpdate();
+      }
+    } catch (error) {
+      console.error('Error saving notes:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSavePaymentNotes = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch(`http://localhost:5000/api/bookings/${booking._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ payment_notes: paymentNotes })
+      });
+      if (response.ok) {
+        setIsEditingPaymentNotes(false);
+        if (onUpdate) onUpdate();
+      }
+    } catch (error) {
+      console.error('Error saving payment notes:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
@@ -12,7 +72,15 @@ const BookingViewModal = ({ booking, onClose }) => {
               <span className="text-white text-xl">📋</span>
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900">Booking Details</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-gray-900">Booking Details</h2>
+                {booking.is_owner_pass && (
+                  <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold flex items-center gap-1">
+                    <span>👑</span>
+                    Owner Pass
+                  </span>
+                )}
+              </div>
               <p className="text-blue-600 font-semibold">{booking.booking_id}</p>
             </div>
             <button 
@@ -25,7 +93,7 @@ const BookingViewModal = ({ booking, onClose }) => {
         </div>
         
         <div className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="bg-blue-50 p-3 rounded border border-blue-200">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-blue-600">👤</span>
@@ -125,6 +193,90 @@ const BookingViewModal = ({ booking, onClose }) => {
                 <p className="text-xs text-gray-500">{new Date(booking.createdAt).toLocaleTimeString()}</p>
               </div>
             </div>
+
+            <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-600">📝</span>
+                  <span className="text-sm font-semibold text-gray-700">Notes</span>
+                </div>
+                <button
+                  onClick={() => setIsEditingNotes(!isEditingNotes)}
+                  className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  {isEditingNotes ? 'Cancel' : 'Edit'}
+                </button>
+              </div>
+              {isEditingNotes ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add notes..."
+                    className="w-full p-2 border border-gray-300 rounded text-sm resize-none"
+                    rows={3}
+                  />
+                  <button
+                    onClick={handleSaveNotes}
+                    disabled={isSaving}
+                    className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors disabled:opacity-50"
+                  >
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-900">
+                    {notes || 'No notes added'}
+                  </p>
+                  <div className="text-xs text-gray-500">
+                    <span className="font-medium">Booking Created:</span> {new Date(booking.createdAt).toLocaleDateString()} at {new Date(booking.createdAt).toLocaleTimeString()}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-indigo-50 p-3 rounded border border-indigo-200">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-indigo-600">📝</span>
+                  <span className="text-sm font-semibold text-gray-700">Payment Notes</span>
+                </div>
+                <button
+                  onClick={() => setIsEditingPaymentNotes(!isEditingPaymentNotes)}
+                  className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  {isEditingPaymentNotes ? 'Cancel' : 'Edit'}
+                </button>
+              </div>
+              {isEditingPaymentNotes ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={paymentNotes}
+                    onChange={(e) => setPaymentNotes(e.target.value)}
+                    placeholder="Add payment notes..."
+                    className="w-full p-2 border border-gray-300 rounded text-sm resize-none"
+                    rows={3}
+                  />
+                  <button
+                    onClick={handleSavePaymentNotes}
+                    disabled={isSaving}
+                    className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors disabled:opacity-50"
+                  >
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-900">
+                    {paymentNotes}
+                  </p>
+                  <div className="text-xs text-gray-500">
+                    <span className="font-medium">Amount:</span> ₹{booking.total_amount} | <span className="font-medium">Created:</span> {new Date(booking.createdAt).toLocaleDateString()} at {new Date(booking.createdAt).toLocaleTimeString()}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           {booking.pass_holders && booking.pass_holders.length > 0 && (
@@ -136,55 +288,15 @@ const BookingViewModal = ({ booking, onClose }) => {
                 </div>
                 <div className="space-y-2">
                   {booking.pass_holders.map((holder, index) => (
-                    holder.name && (
-                      <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs">{index + 1}</span>
-                          <span className="font-medium">{holder.name}</span>
-                        </div>
-                        {holder.phone && <span className="text-gray-500 text-xs sm:text-sm ml-7 sm:ml-0">({holder.phone})</span>}
-                      </div>
-                    )
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span className="text-sm font-medium">{holder.name}</span>
+                      <span className="text-xs text-gray-500">{holder.phone}</span>
+                    </div>
                   ))}
                 </div>
               </div>
             </div>
           )}
-          
-          {booking.notes && (
-            <div className="mt-4">
-              <div className="bg-gray-50 rounded border p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-gray-600">📝</span>
-                  <span className="text-sm font-semibold">Notes</span>
-                </div>
-                <p className="text-sm text-gray-700">{booking.notes}</p>
-              </div>
-            </div>
-          )}
-
-          {booking.payment_screenshot && (
-            <div className="mt-4">
-              <a 
-                href={booking.payment_screenshot} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded text-sm hover:bg-blue-100 transition-colors"
-              >
-                <span>📷</span>
-                View Payment Screenshot
-              </a>
-            </div>
-          )}
-          
-          {/* <div className="mt-3 sm:mt-4 flex justify-center">
-            <button
-              onClick={onClose}
-              className="px-4 sm:px-6 py-2 bg-gray-600 text-white rounded text-sm sm:text-base hover:bg-gray-700 transition-colors"
-            >
-              Close
-            </button>
-          </div> */}
         </div>
       </div>
     </div>
