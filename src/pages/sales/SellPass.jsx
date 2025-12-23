@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAppContext } from '../../context/AppContext';
 import toast, { Toaster } from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const SellPass = ({ onClose, onBookingCreated, editData }) => {
   const navigate = useNavigate();
+  const { user } = useAppContext();
   const [passTypes, setPassTypes] = useState([]);
   const [formData, setFormData] = useState({
     pass_type_id: '',
@@ -17,7 +19,9 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
     custom_price: '',
     upi_id: '',
     transaction_id: '',
-    payment_screenshot: null
+    payment_screenshot: null,
+    notes: '',
+    is_owner_pass: false
   });
   const [showPassDetails, setShowPassDetails] = useState(false);
   const [showCreatePassType, setShowCreatePassType] = useState(false);
@@ -160,6 +164,28 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
     setLoading(true);
 
     try {
+      // If Sales Staff is NOT checked, don't create booking
+      if (!formData.is_owner_pass) {
+        toast.success(`⚠️ No Booking Created!\n\nCustomer: ${formData.buyer_name}\nPass Type: ${selectedPass.name}\nPeople: ${totalPeople}\n\nSales Staff must be checked to create booking`, {
+          duration: 4000,
+          style: {
+            minWidth: '400px',
+          },
+        });
+        
+        resetForm();
+        
+        if (onBookingCreated) {
+          onBookingCreated();
+        }
+        if (onClose) {
+          onClose();
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Continue with normal booking creation when sales staff is checked
       let paymentScreenshotUrl = null;
       
       console.log('Payment screenshot file:', formData.payment_screenshot);
@@ -209,8 +235,10 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         pass_holders: passHolders,
         payment_mode: formData.payment_mode,
         mark_as_paid: formData.payment_status === 'Paid',
-        notes: `${formData.passes.length} pass${formData.passes.length > 1 ? 'es' : ''} booked. ${buildPaymentNotes()}`,
-        payment_screenshot: paymentScreenshotUrl
+        notes: formData.notes || `📝 ${formData.passes.length} pass${formData.passes.length > 1 ? 'es' : ''} booked. ${formData.payment_mode} payment received`,
+        payment_notes: formData.payment_status === 'Paid' ? `${formData.passes.length} pass${formData.passes.length > 1 ? 'es' : ''} booked. ${formData.payment_mode} payment received` : '',
+        payment_screenshot: paymentScreenshotUrl,
+        is_owner_pass: formData.is_owner_pass
       };
       
       console.log('Sending booking data with total_amount:', saleData.total_amount);
@@ -232,7 +260,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         throw new Error(responseData.message || 'Failed to create booking');
       }
       
-      toast.success(`🎉 Booking created successfully!\n\nCustomer: ${formData.buyer_name}\nPass Type: ${selectedPass.name}\nPasses: ${formData.passes.length}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}`, {
+      toast.success(`🎉 ${formData.is_owner_pass ? 'Owner Pass' : 'Booking'} created successfully!\n\nCustomer: ${formData.buyer_name}\nPass Type: ${selectedPass.name}\nPasses: ${formData.passes.length}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}${formData.is_owner_pass ? '\n\n⚠️ This is an Owner Pass' : ''}`, {
         duration: 6000,
         style: {
           minWidth: '400px',
@@ -275,7 +303,9 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       custom_price: '',
       upi_id: '',
       transaction_id: '',
-      payment_screenshot: null
+      payment_screenshot: null,
+      notes: '',
+      is_owner_pass: false
     });
     setShowPassDetails(false);
     setUploading(false);
@@ -603,6 +633,42 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                 </div>
               </div>
             )}
+
+            <div className="border-b border-gray-200 pb-6 mb-6">
+              <label className="block text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  user?.role === 'Admin' ? 'bg-red-600' : 'bg-blue-600'
+                }`}>
+                  <span className="text-white text-sm">👨‍💼</span>
+                </div>
+                {user?.role === 'Admin' ? 'Owner Pass' : 'Sales Staff'}
+              </label>
+              <label className="flex items-center space-x-4 cursor-pointer p-4 border-2 border-slate-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 shadow-sm hover:shadow-md">
+                <input
+                  type="checkbox"
+                  checked={formData.is_owner_pass}
+                  onChange={(e) => setFormData({...formData, is_owner_pass: e.target.checked})}
+                  className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
+                />
+                <span className="font-semibold text-lg text-blue-600">{user?.role === 'Admin' ? 'Owner Pass - Check to Create Booking' : 'Sales Staff - Check to Create Booking'}</span>
+              </label>
+            </div>
+
+            <div className="border-b border-gray-200 pb-6 mb-6">
+              <label className="block text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 bg-yellow-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm">📝</span>
+                </div>
+                Additional Notes
+              </label>
+              <textarea
+                className="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 transition-all duration-200 resize-none"
+                placeholder="Add any special notes or requirements for this booking..."
+                rows={4}
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              />
+            </div>
 
             <div>
               <button

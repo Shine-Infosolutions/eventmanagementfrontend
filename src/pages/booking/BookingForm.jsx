@@ -287,6 +287,25 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
           </div>
 
           <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">📝</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">Notes</h3>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Additional Notes (Optional)</label>
+              <textarea
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 transition-all resize-none"
+                placeholder="Add any special notes or requirements..."
+                rows={3}
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex gap-4">
               <button
                 type="button"
