@@ -441,14 +441,14 @@ const BookingList = () => {
                     <div className="mb-2 sm:mb-0">
                       <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
                         {booking.booking_id}
-                        {booking.is_owner_pass ? (
+                        {booking.created_by?.role === 'Admin' ? (
                           <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold flex items-center gap-1">
                             <span>👑</span>
                             Owner
                           </span>
                         ) : (
                           <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
-                            Staff
+                            {booking.created_by?.name || 'Staff'}
                           </span>
                         )}
                       </div>
@@ -553,14 +553,14 @@ const BookingList = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                             {booking.booking_id}
-                            {booking.is_owner_pass ? (
+                            {booking.created_by?.role === 'Admin' ? (
                               <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold flex items-center gap-1">
                                 <span>👑</span>
                                 Owner
                               </span>
                             ) : (
                               <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
-                                Staff
+                                {booking.created_by?.name || 'Staff'}
                               </span>
                             )}
                           </div>

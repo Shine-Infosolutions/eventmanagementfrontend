@@ -74,12 +74,6 @@ const BookingViewModal = ({ booking, onClose, onUpdate }) => {
             <div className="flex-1">
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-bold text-gray-900">Booking Details</h2>
-                {booking.is_owner_pass && (
-                  <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold flex items-center gap-1">
-                    <span>👑</span>
-                    Owner Pass
-                  </span>
-                )}
               </div>
               <p className="text-blue-600 font-semibold">{booking.booking_id}</p>
             </div>
