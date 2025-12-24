@@ -16,7 +16,9 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
     upi_id: '',
     transaction_id: '',
     notes: '',
-    pass_holders: []
+    pass_holders: [],
+    custom_price: '',
+    use_custom_price: false
   });
   const [loading, setLoading] = useState(false);
 
@@ -68,7 +70,8 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
         pass_holders: formData.pass_holders.filter(holder => holder.name.trim()),
         payment_mode: formData.payment_mode,
         payment_status: 'Paid',
-        notes: formData.notes || `${formData.payment_mode} payment${formData.transaction_id ? ` - TXN: ${formData.transaction_id}` : ''}${formData.upi_id ? ` - UPI: ${formData.upi_id}` : ''}`
+        notes: formData.notes || `${formData.payment_mode} payment${formData.transaction_id ? ` - TXN: ${formData.transaction_id}` : ''}${formData.upi_id ? ` - UPI: ${formData.upi_id}` : ''}`,
+        custom_price: formData.use_custom_price ? parseInt(formData.custom_price) : null
       };
 
       const token = localStorage.getItem('token');
@@ -87,7 +90,7 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
       const booking = await response.json();
       const bookingId = booking.booking_id || `NY2025-${booking._id?.slice(-6) || 'XXXXXX'}`;
       alert(`Booking created successfully!\nBooking ID: ${bookingId}`);
-      setFormData({ pass_type_id: passTypes[0]?._id || '', buyer_name: '', buyer_phone: '', payment_mode: 'Cash', upi_id: '', transaction_id: '', notes: '', pass_holders: [] });
+      setFormData({ pass_type_id: passTypes[0]?._id || '', buyer_name: '', buyer_phone: '', payment_mode: 'Cash', upi_id: '', transaction_id: '', notes: '', pass_holders: [], custom_price: '', use_custom_price: false });
       onBookingCreated?.();
       onClose();
     } catch (error) {
@@ -277,10 +280,47 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
                 </div>
               )}
 
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-700">Total Amount:</span>
-                  <span className="text-2xl font-bold text-green-600">₹{passTypes.find(p => p._id === formData.pass_type_id)?.price || 0}</span>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="use_custom_price"
+                    checked={formData.use_custom_price}
+                    onChange={(e) => setFormData({...formData, use_custom_price: e.target.checked, custom_price: e.target.checked ? formData.custom_price : ''})}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="use_custom_price" className="text-sm font-semibold text-gray-700">
+                    Use Custom Price
+                  </label>
+                </div>
+                
+                {formData.use_custom_price && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Custom Price (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      required={formData.use_custom_price}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all"
+                      placeholder="Enter custom price"
+                      value={formData.custom_price}
+                      onChange={(e) => setFormData({...formData, custom_price: e.target.value})}
+                    />
+                  </div>
+                )}
+                
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold text-gray-700">Total Amount:</span>
+                    <span className="text-2xl font-bold text-green-600">
+                      ₹{formData.use_custom_price && formData.custom_price ? formData.custom_price : (passTypes.find(p => p._id === formData.pass_type_id)?.price || 0)}
+                    </span>
+                  </div>
+                  {formData.use_custom_price && (
+                    <div className="text-sm text-gray-600 mt-1">
+                      Default price: ₹{passTypes.find(p => p._id === formData.pass_type_id)?.price || 0}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -123,7 +123,14 @@ const BookingViewModal = ({ booking, onClose, onUpdate }) => {
                 </div>
                 <div>
                   <span className="text-xs text-gray-500">Amount</span>
-                  <p className="font-semibold text-green-600">₹{booking.total_amount || booking.pass_type_id?.price || 0}</p>
+                  <div className="flex flex-col">
+                    <p className="font-semibold text-green-600">₹{booking.total_amount || booking.pass_type_id?.price || 0}</p>
+                    {booking.custom_price && booking.custom_price !== booking.pass_type_id?.price && (
+                      <div className="text-xs text-orange-600 font-medium">
+                        Custom Price (Default: ₹{booking.pass_type_id?.price})
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

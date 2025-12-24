@@ -50,58 +50,65 @@ const Dashboard = () => {
   const loadDashboardStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const [passTypesRes, bookingsRes] = await Promise.all([
+      const [passTypesRes, allBookingsRes, staffBookingsRes] = await Promise.all([
         fetch(`${API_URL}/api/pass-types`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch(`${API_URL}/api/bookings`, {
           headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${API_URL}/api/bookings/staff-only`, {
+          headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
 
-      if (passTypesRes.ok && bookingsRes.ok) {
+      if (passTypesRes.ok && allBookingsRes.ok && staffBookingsRes.ok) {
         const passTypes = await passTypesRes.json();
-        const bookings = await bookingsRes.json();
+        const allBookings = await allBookingsRes.json();
+        const staffBookings = await staffBookingsRes.json();
         
-        // Calculate revenue from all bookings
-        const paidBookings = bookings.filter(b => b.payment_status === 'Paid');
-        const totalRevenue = bookings.reduce((sum, b) => {
+        // Calculate revenue from staff bookings only (excluding admin bookings)
+        const paidStaffBookings = staffBookings.filter(b => b.payment_status === 'Paid');
+        const totalRevenue = staffBookings.reduce((sum, b) => {
           const amount = b.total_amount || (typeof b.pass_type_id === 'object' ? b.pass_type_id.price : passTypes.find(pt => pt._id === b.pass_type_id)?.price || 0);
           return sum + amount;
         }, 0);
         
-        // Calculate check-in stats
-        const checkedInBookings = bookings.filter(b => b.status === 'Checked-in' || b.checked_in);
-        const totalPeopleEntered = bookings.reduce((sum, b) => sum + (b.people_entered || 0), 0);
-        const pendingEntry = bookings.filter(b => 
+        // Use all bookings for other stats (check-in, etc.)
+        const checkedInBookings = allBookings.filter(b => b.status === 'Checked-in' || b.checked_in);
+        const totalPeopleEntered = allBookings.reduce((sum, b) => sum + (b.people_entered || 0), 0);
+        const pendingEntry = allBookings.filter(b => 
           (!b.status || b.status === 'Pending') && 
           !b.checked_in && 
           (b.people_entered === 0 || !b.people_entered)
         ).length;
         
-        // Pass type breakdown with revenue
+        // Pass type breakdown with revenue from staff bookings only
         const passTypeStats = passTypes.map(pt => {
-          const typeBookings = bookings.filter(b => 
+          const typeStaffBookings = staffBookings.filter(b => 
             (typeof b.pass_type_id === 'object' ? b.pass_type_id._id : b.pass_type_id) === pt._id
           );
-          const typePaidBookings = typeBookings.filter(b => b.payment_status === 'Paid');
+          const typePaidStaffBookings = typeStaffBookings.filter(b => b.payment_status === 'Paid');
+          const typeAllBookings = allBookings.filter(b => 
+            (typeof b.pass_type_id === 'object' ? b.pass_type_id._id : b.pass_type_id) === pt._id
+          );
           return {
             ...pt,
-            count: typePaidBookings.length,
-            revenue: typePaidBookings.length * pt.price,
-            peopleEntered: typeBookings.reduce((sum, b) => sum + (b.people_entered || 0), 0)
+            count: typePaidStaffBookings.length,
+            revenue: typePaidStaffBookings.length * pt.price,
+            peopleEntered: typeAllBookings.reduce((sum, b) => sum + (b.people_entered || 0), 0)
           };
         });
 
         setStats({
-          totalBookings: bookings.length,
-          paidBookings: paidBookings.length,
+          totalBookings: allBookings.length,
+          paidBookings: paidStaffBookings.length,
           totalRevenue,
           passTypes: passTypeStats,
           checkedIn: checkedInBookings.length,
           pending: pendingEntry,
           totalPeopleEntered,
-          recentBookings: bookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5)
+          recentBookings: allBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5)
         });
       }
     } catch (error) {
