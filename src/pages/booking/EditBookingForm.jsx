@@ -21,6 +21,7 @@ const EditBookingForm = ({ booking, onClose, onBookingUpdated }) => {
 
   useEffect(() => {
     if (booking) {
+      const hasCustomPrice = booking.custom_price && booking.custom_price > 0;
       setFormData({
         buyer_name: booking.buyer_name || '',
         buyer_phone: booking.buyer_phone || '',
@@ -33,7 +34,7 @@ const EditBookingForm = ({ booking, onClose, onBookingUpdated }) => {
         total_amount: booking.total_amount || 0,
         payment_screenshot: booking.payment_screenshot || null,
         custom_price: booking.custom_price || 0,
-        use_custom_price: booking.custom_price ? true : false
+        use_custom_price: hasCustomPrice
       });
     }
   }, [booking]);
@@ -278,16 +279,17 @@ const EditBookingForm = ({ booking, onClose, onBookingUpdated }) => {
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Custom Price (₹)</label>
                     <input
-                      type="number"
-                      min="0"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all"
                       value={formData.custom_price}
                       onChange={(e) => {
-                        const customPrice = parseInt(e.target.value) || 0;
+                        const value = e.target.value.replace(/[^0-9]/g, '');
                         setFormData({
                           ...formData, 
-                          custom_price: customPrice,
-                          total_amount: customPrice
+                          custom_price: value,
+                          total_amount: value ? parseInt(value) : (booking?.pass_type_id?.price || 0)
                         });
                       }}
                     />
