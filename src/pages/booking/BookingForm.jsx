@@ -7,6 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
   const { addBooking } = useAppContext();
+  const [customPriceValue, setCustomPriceValue] = useState('');
   const [passTypes, setPassTypes] = useState([]);
   const [formData, setFormData] = useState({
     pass_type_id: '',
@@ -29,7 +30,7 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
   }, [isOpen]);
 
   useEffect(() => {
-    if (passTypes.length > 0) {
+    if (passTypes.length > 0 && !formData.pass_type_id) {
       setFormData(prev => ({
         ...prev,
         pass_type_id: passTypes[0]._id,
@@ -71,8 +72,14 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
         payment_mode: formData.payment_mode,
         payment_status: 'Paid',
         notes: formData.notes || `${formData.payment_mode} payment${formData.transaction_id ? ` - TXN: ${formData.transaction_id}` : ''}${formData.upi_id ? ` - UPI: ${formData.upi_id}` : ''}`,
-        custom_price: formData.use_custom_price ? parseInt(formData.custom_price) : null
+        custom_price: formData.use_custom_price ? parseInt(customPriceValue || formData.custom_price) : null
       };
+
+      console.log('Sending booking data:', {
+        use_custom_price: formData.use_custom_price,
+        custom_price: bookingData.custom_price,
+        customPriceValue: customPriceValue
+      });
 
       const token = localStorage.getItem('token');
       
@@ -124,15 +131,18 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
               value={formData.pass_type_id}
               onChange={(e) => {
                 const selectedPass = passTypes.find(p => p._id === e.target.value);
-                setFormData({
-                  ...formData, 
+                setFormData(prev => ({
+                  ...prev, 
                   pass_type_id: e.target.value,
                   pass_holders: selectedPass ? Array(5).fill({ name: '', phone: '' }) : []
-                });
+                  // Keep custom_price and use_custom_price unchanged
+                }));
               }}
             >
               {passTypes.map((passType) => (
-                <option key={passType._id} value={passType._id}>{passType.name} Pass - ₹{passType.price}</option>
+                <option key={passType._id} value={passType._id}>
+                  {passType.name} Pass - ₹{passType.price || 0}
+                </option>
               ))}
             </select>
           </div>
@@ -286,7 +296,13 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
                     type="checkbox"
                     id="use_custom_price"
                     checked={formData.use_custom_price}
-                    onChange={(e) => setFormData({...formData, use_custom_price: e.target.checked, custom_price: e.target.checked ? formData.custom_price : ''})}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setFormData({...formData, use_custom_price: checked});
+                      if (!checked) {
+                        setCustomPriceValue('');
+                      }
+                    }}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <label htmlFor="use_custom_price" className="text-sm font-semibold text-gray-700">
@@ -298,13 +314,22 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Custom Price (₹)</label>
                     <input
-                      type="number"
-                      min="0"
+                      type="text"
+                      inputMode="numeric"
                       required={formData.use_custom_price}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all"
                       placeholder="Enter custom price"
-                      value={formData.custom_price}
-                      onChange={(e) => setFormData({...formData, custom_price: e.target.value})}
+                      value={customPriceValue}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        console.log('Custom price input:', value);
+                        if (/^[0-9]*$/.test(value)) {
+                          setCustomPriceValue(value);
+                          setFormData(prev => ({...prev, custom_price: value}));
+                          console.log('Custom price set to:', value);
+                        }
+                      }}
+                      onFocus={() => console.log('Custom price focused, current value:', customPriceValue)}
                     />
                   </div>
                 )}
@@ -313,12 +338,12 @@ const BookingForm = ({ isOpen, onClose, onBookingCreated }) => {
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold text-gray-700">Total Amount:</span>
                     <span className="text-2xl font-bold text-green-600">
-                      ₹{formData.use_custom_price && formData.custom_price ? formData.custom_price : (passTypes.find(p => p._id === formData.pass_type_id)?.price || 0)}
+                      ₹{formData.use_custom_price && customPriceValue ? customPriceValue : (selectedPassType?.price || 0)}
                     </span>
                   </div>
                   {formData.use_custom_price && (
                     <div className="text-sm text-gray-600 mt-1">
-                      Default price: ₹{passTypes.find(p => p._id === formData.pass_type_id)?.price || 0}
+                      Default price: ₹{selectedPassType?.price || 0}
                     </div>
                   )}
                 </div>

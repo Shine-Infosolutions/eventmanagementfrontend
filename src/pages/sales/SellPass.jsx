@@ -265,7 +265,9 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         throw new Error(responseData.message || 'Failed to create booking');
       }
       
-      toast.success(`🎉 ${formData.is_owner_pass ? 'Owner Pass' : 'Booking'} created successfully!\n\nCustomer: ${formData.buyer_name}\nPass Type: ${selectedPass.name}\nPasses: ${formData.passes.length}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${totalPrice.toLocaleString()}${formData.is_owner_pass ? '\n\n⚠️ This is an Owner Pass' : ''}`, {
+      const displayAmount = formData.custom_price ? parseInt(formData.custom_price) * formData.passes.length : totalPrice;
+      
+      toast.success(`🎉 ${formData.is_owner_pass ? 'Owner Pass' : 'Booking'} created successfully!\n\nCustomer: ${formData.buyer_name}\nPass Type: ${selectedPass.name}\nPasses: ${formData.passes.length}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${displayAmount.toLocaleString()}${formData.is_owner_pass ? '\n\n⚠️ This is an Owner Pass' : ''}`, {
         duration: 6000,
         style: {
           minWidth: '400px',
