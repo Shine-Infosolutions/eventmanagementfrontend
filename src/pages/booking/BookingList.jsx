@@ -24,7 +24,8 @@ const BookingList = () => {
     search: '',
     passType: 'all',
     paymentStatus: 'all',
-    checkinStatus: 'all'
+    checkinStatus: 'all',
+    staffRole: 'all'
   });
 
   useEffect(() => {
@@ -195,6 +196,12 @@ const BookingList = () => {
       );
     }
 
+    if (filters.staffRole !== 'all') {
+      filtered = filtered.filter(booking => 
+        booking.created_by?.role === filters.staffRole
+      );
+    }
+
     setFilteredBookings(filtered);
   }, [filters, bookings]);
 
@@ -232,6 +239,20 @@ const BookingList = () => {
     );
   };
 
+  const getStaffRoleBadge = (staffRole) => {
+    const colors = {
+      'Admin': 'bg-red-100 text-red-800',
+      'Sales Staff': 'bg-blue-100 text-blue-800',
+      'Gate Staff': 'bg-green-100 text-green-800'
+    };
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[staffRole] || 'bg-gray-100 text-gray-800'}`}>
+        {staffRole || 'Unknown'}
+      </span>
+    );
+  };
+
   const getPaymentModeBadge = (mode) => {
     const colors = {
       'Cash': 'bg-yellow-100 text-yellow-800',
@@ -259,7 +280,9 @@ const BookingList = () => {
           <div className="flex gap-2">
             <Button 
               onClick={() => {
-                const excelData = filteredBookings.map(booking => ({
+                const excelData = filteredBookings
+                  .filter(booking => !booking.is_owner_pass)
+                  .map(booking => ({
                   'Booking Number': booking.booking_id || booking.booking_number,
                   'Customer Name': booking.buyer_name,
                   'Phone': booking.buyer_phone,
@@ -351,10 +374,25 @@ const BookingList = () => {
               <option value="pending">Not Checked In</option>
             </select>
           </div>
-          <div className="flex justify-end xl:justify-start">
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Staff Role</label>
+            <select
+              className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+              value={filters.staffRole}
+              onChange={(e) => setFilters({...filters, staffRole: e.target.value})}
+            >
+              <option value="all">All Staff</option>
+              <option value="Admin">Admin</option>
+              <option value="Sales Staff">Sales Staff</option>
+              <option value="Gate Staff">Gate Staff</option>
+            </select>
+          </div>
+
+          <div className="flex justify-end xl:justify-start items-center">
             <button
-              onClick={() => setFilters({ search: '', passType: 'all', paymentStatus: 'all', checkinStatus: 'all' })}
-              className="w-full sm:w-auto px-4 py-2 sm:py-3 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm sm:text-base font-medium"
+              onClick={() => setFilters({ search: '', passType: 'all', paymentStatus: 'all', checkinStatus: 'all', staffRole: 'all' })}
+              className="w-full sm:w-auto px-2 py-0.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-xs font-medium h-8"
             >
               Clear Filters
             </button>
@@ -363,9 +401,22 @@ const BookingList = () => {
       </div>
 
       <div className="mb-4">
-        <p className="text-sm text-gray-600">
-          Showing {filteredBookings.length} of {bookings.length} bookings
-        </p>
+        <div className="flex justify-between items-center">
+          <p className="text-sm text-gray-600">
+            Showing {filteredBookings.length} of {bookings.length} bookings
+            {bookings.filter(b => !b.is_owner_pass).length !== bookings.length && (
+              <span className="ml-2 text-xs text-gray-500">
+                ({bookings.filter(b => !b.is_owner_pass).length} paid bookings)
+              </span>
+            )}
+          </p>
+          <div className="text-sm font-semibold text-green-600">
+            Total Revenue: ₹{filteredBookings
+              .filter(b => !b.is_owner_pass && b.payment_status === 'Paid')
+              .reduce((sum, b) => sum + (b.total_amount || b.pass_type_id?.price || 0), 0)
+              .toLocaleString()}
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -390,10 +441,14 @@ const BookingList = () => {
                     <div className="mb-2 sm:mb-0">
                       <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
                         {booking.booking_id}
-                        {booking.is_owner_pass && (
+                        {booking.is_owner_pass ? (
                           <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold flex items-center gap-1">
                             <span>👑</span>
                             Owner
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                            Staff
                           </span>
                         )}
                       </div>
@@ -498,14 +553,21 @@ const BookingList = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                             {booking.booking_id}
-                            {booking.is_owner_pass && (
+                            {booking.is_owner_pass ? (
                               <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold flex items-center gap-1">
                                 <span>👑</span>
                                 Owner
                               </span>
+                            ) : (
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                                Staff
+                              </span>
                             )}
                           </div>
                           <div className="text-xs text-gray-500">People: {booking.total_people}</div>
+                          {booking.created_by && (
+                            <div className="text-xs text-gray-400">By: {booking.created_by.name}</div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>

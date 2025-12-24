@@ -13,7 +13,9 @@ const EditBookingForm = ({ booking, onClose, onBookingUpdated }) => {
     people_entered: 0,
     total_people: 1,
     total_amount: 0,
-    payment_screenshot: null
+    payment_screenshot: null,
+    custom_price: 0,
+    use_custom_price: false
   });
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +31,9 @@ const EditBookingForm = ({ booking, onClose, onBookingUpdated }) => {
         people_entered: booking.people_entered || 0,
         total_people: booking.total_people || 1,
         total_amount: booking.total_amount || 0,
-        payment_screenshot: booking.payment_screenshot || null
+        payment_screenshot: booking.payment_screenshot || null,
+        custom_price: booking.custom_price || 0,
+        use_custom_price: booking.custom_price ? true : false
       });
     }
   }, [booking]);
@@ -55,7 +59,8 @@ const EditBookingForm = ({ booking, onClose, onBookingUpdated }) => {
           pass_holders: formData.pass_holders,
           people_entered: formData.people_entered,
           total_people: formData.total_people,
-          total_amount: formData.total_amount
+          total_amount: formData.total_amount,
+          custom_price: formData.use_custom_price ? formData.custom_price : null
         })
       });
 
@@ -249,6 +254,46 @@ const EditBookingForm = ({ booking, onClose, onBookingUpdated }) => {
                 />
               </div>
               <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="use_custom_price_edit"
+                    checked={formData.use_custom_price}
+                    onChange={(e) => {
+                      const useCustom = e.target.checked;
+                      setFormData({
+                        ...formData, 
+                        use_custom_price: useCustom,
+                        total_amount: useCustom ? formData.custom_price : (booking?.pass_type_id?.price || 0)
+                      });
+                    }}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="use_custom_price_edit" className="text-sm font-semibold text-gray-700">
+                    Use Custom Price
+                  </label>
+                </div>
+                
+                {formData.use_custom_price && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Custom Price (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all"
+                      value={formData.custom_price}
+                      onChange={(e) => {
+                        const customPrice = parseInt(e.target.value) || 0;
+                        setFormData({
+                          ...formData, 
+                          custom_price: customPrice,
+                          total_amount: customPrice
+                        });
+                      }}
+                    />
+                  </div>
+                )}
+                
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Total Amount (₹)</label>
                   <input
@@ -256,7 +301,13 @@ const EditBookingForm = ({ booking, onClose, onBookingUpdated }) => {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all text-lg font-semibold"
                     value={formData.total_amount}
                     onChange={(e) => setFormData({...formData, total_amount: parseInt(e.target.value) || 0})}
+                    disabled={formData.use_custom_price}
                   />
+                  {formData.use_custom_price && (
+                    <div className="text-sm text-gray-600 mt-1">
+                      Default price: ₹{booking?.pass_type_id?.price || 0}
+                    </div>
+                  )}
                 </div>
                 {formData.payment_screenshot && (
                   <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">

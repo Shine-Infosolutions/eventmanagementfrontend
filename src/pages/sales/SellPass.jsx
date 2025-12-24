@@ -232,6 +232,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         total_people: totalPeople,
         total_passes: formData.passes.length,
         total_amount: totalPrice,
+        custom_price: formData.custom_price ? parseInt(formData.custom_price) : null,
         pass_holders: passHolders,
         payment_mode: formData.payment_mode,
         mark_as_paid: formData.payment_status === 'Paid',
@@ -241,7 +242,11 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         is_owner_pass: formData.is_owner_pass
       };
       
-      console.log('Sending booking data with total_amount:', saleData.total_amount);
+      console.log('Sending booking data:', {
+        total_amount: saleData.total_amount,
+        custom_price: saleData.custom_price,
+        default_price: selectedPass.price
+      });
       
       const response = await fetch(`${API_URL}/api/bookings`, {
         method: 'POST',
