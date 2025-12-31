@@ -164,28 +164,10 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
     setLoading(true);
 
     try {
-      // If Sales Staff is NOT checked, don't create booking
-      if (!formData.is_owner_pass) {
-        toast.success(`⚠️ No Booking Created!\n\nCustomer: ${formData.buyer_name}\nPass Type: ${selectedPass.name}\nPeople: ${totalPeople}\n\nSales Staff must be checked to create booking`, {
-          duration: 4000,
-          style: {
-            minWidth: '400px',
-          },
-        });
-        
-        resetForm();
-        
-        if (onBookingCreated) {
-          onBookingCreated();
-        }
-        if (onClose) {
-          onClose();
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Continue with normal booking creation when sales staff is checked
+      const selectedPass = passTypes.find(p => p._id === formData.pass_type_id);
+      const totalPeople = formData.passes.reduce((sum, pass) => sum + pass.people_count, 0);
+      
+      // Continue with booking creation for both checked and unchecked states
       let paymentScreenshotUrl = null;
       
       console.log('Payment screenshot file:', formData.payment_screenshot);
@@ -204,8 +186,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
       } else {
         console.log('No image selected for upload');
       }
-      const selectedPass = passTypes.find(p => p._id === formData.pass_type_id);
-      const totalPeople = formData.passes.reduce((sum, pass) => sum + pass.people_count, 0);
+      
       const totalPrice = selectedPass.price * formData.passes.length;
       
       const token = localStorage.getItem('token');
@@ -231,8 +212,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         buyer_phone: formData.buyer_phone,
         total_people: totalPeople,
         total_passes: formData.passes.length,
-        total_amount: totalPrice,
-        custom_price: formData.custom_price ? parseInt(formData.custom_price) : null,
+        total_amount: formData.is_owner_pass ? 0 : totalPrice,
+        custom_price: formData.is_owner_pass ? 0 : (formData.custom_price ? parseInt(formData.custom_price) : null),
         pass_holders: passHolders,
         payment_mode: formData.payment_mode,
         mark_as_paid: formData.payment_status === 'Paid',
@@ -265,7 +246,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
         throw new Error(responseData.message || 'Failed to create booking');
       }
       
-      const displayAmount = formData.custom_price ? parseInt(formData.custom_price) * formData.passes.length : totalPrice;
+      const displayAmount = formData.is_owner_pass ? 0 : (formData.custom_price ? parseInt(formData.custom_price) * formData.passes.length : totalPrice);
       
       toast.success(`🎉 ${formData.is_owner_pass ? 'Owner Pass' : 'Booking'} created successfully!\n\nCustomer: ${formData.buyer_name}\nPass Type: ${selectedPass.name}\nPasses: ${formData.passes.length}\nPayment: ${formData.payment_status}\nTotal People: ${totalPeople}\nTotal Amount: ₹${displayAmount.toLocaleString()}${formData.is_owner_pass ? '\n\n⚠️ This is an Owner Pass' : ''}`, {
         duration: 6000,
@@ -320,8 +301,8 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
 
   const selectedPass = passTypes.find(p => p._id === formData.pass_type_id);
   const totalPeople = formData.passes.reduce((sum, pass) => sum + pass.people_count, 0);
-  const currentPrice = formData.custom_price ? parseInt(formData.custom_price) : (selectedPass?.price || 0);
-  const totalPrice = currentPrice * formData.passes.length;
+  const currentPrice = formData.is_owner_pass ? 0 : (formData.custom_price ? parseInt(formData.custom_price) : (selectedPass?.price || 0));
+  const totalPrice = formData.is_owner_pass ? 0 : (currentPrice * formData.passes.length);
 
   return (
     <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
@@ -431,8 +412,9 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                               type="number"
                               className="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 text-lg font-semibold"
                               placeholder="Enter price"
-                              value={formData.custom_price || selectedPass.price}
+                              value={formData.is_owner_pass ? 0 : (formData.custom_price || selectedPass.price)}
                               onChange={(e) => setFormData({...formData, custom_price: e.target.value})}
+                              disabled={formData.is_owner_pass}
                             />
                           </div>
                           <div>
@@ -648,7 +630,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                 }`}>
                   <span className="text-white text-sm">👨‍💼</span>
                 </div>
-                {user?.role === 'Admin' ? 'Owner Pass' : 'Sales Staff'}
+                {user?.role === 'Admin' ? 'Owner Pass' : 'Owner'}
               </label>
               <label className="flex items-center space-x-4 cursor-pointer p-4 border-2 border-slate-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 shadow-sm hover:shadow-md">
                 <input
@@ -657,7 +639,7 @@ const SellPass = ({ onClose, onBookingCreated, editData }) => {
                   onChange={(e) => setFormData({...formData, is_owner_pass: e.target.checked})}
                   className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
                 />
-                <span className="font-semibold text-lg text-blue-600">{user?.role === 'Admin' ? 'Owner Pass - Check to Create Booking' : 'Sales Staff - Check to Create Booking'}</span>
+                <span className="font-semibold text-lg text-blue-600">{user?.role === 'Admin' ? 'Owner Pass - Check to Create Booking' : 'Owner - Check to Create Booking'}</span>
               </label>
             </div>
 

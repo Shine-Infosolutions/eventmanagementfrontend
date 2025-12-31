@@ -67,11 +67,11 @@ const Dashboard = () => {
         const allBookings = await allBookingsRes.json();
         const staffBookings = await staffBookingsRes.json();
         
-        // Calculate revenue from staff bookings only (excluding admin bookings)
-        const paidStaffBookings = staffBookings.filter(b => b.payment_status === 'Paid');
-        const totalRevenue = staffBookings.reduce((sum, b) => {
-          const amount = b.total_amount || (typeof b.pass_type_id === 'object' ? b.pass_type_id.price : passTypes.find(pt => pt._id === b.pass_type_id)?.price || 0);
-          return sum + amount;
+        // Calculate revenue from all paid bookings
+        const paidBookings = allBookings.filter(b => b.payment_status === 'Paid');
+        const totalRevenue = paidBookings.reduce((sum, b) => {
+          // Use actual total_amount from booking (handles owner passes with 0 amount)
+          return sum + (b.total_amount || 0);
         }, 0);
         
         // Use all bookings for other stats (check-in, etc.)
@@ -83,26 +83,24 @@ const Dashboard = () => {
           (b.people_entered === 0 || !b.people_entered)
         ).length;
         
-        // Pass type breakdown with revenue from staff bookings only
+        // Pass type breakdown with revenue from all bookings
         const passTypeStats = passTypes.map(pt => {
-          const typeStaffBookings = staffBookings.filter(b => 
+          const typeBookings = allBookings.filter(b => 
             (typeof b.pass_type_id === 'object' ? b.pass_type_id._id : b.pass_type_id) === pt._id
           );
-          const typePaidStaffBookings = typeStaffBookings.filter(b => b.payment_status === 'Paid');
-          const typeAllBookings = allBookings.filter(b => 
-            (typeof b.pass_type_id === 'object' ? b.pass_type_id._id : b.pass_type_id) === pt._id
-          );
+          const typePaidBookings = typeBookings.filter(b => b.payment_status === 'Paid');
+          const typeRevenue = typePaidBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0);
           return {
             ...pt,
-            count: typePaidStaffBookings.length,
-            revenue: typePaidStaffBookings.length * pt.price,
-            peopleEntered: typeAllBookings.reduce((sum, b) => sum + (b.people_entered || 0), 0)
+            count: typePaidBookings.length,
+            revenue: typeRevenue,
+            peopleEntered: typeBookings.reduce((sum, b) => sum + (b.people_entered || 0), 0)
           };
         });
 
         setStats({
           totalBookings: allBookings.length,
-          paidBookings: paidStaffBookings.length,
+          paidBookings: paidBookings.length,
           totalRevenue,
           passTypes: passTypeStats,
           checkedIn: checkedInBookings.length,
