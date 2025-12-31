@@ -19,6 +19,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     'Sales Staff': [
       { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
       { id: 'bookings', label: 'Bookings List', icon: MdList, path: '/bookings' },
+      { id: 'gate', label: 'Gate Entry', icon: MdLogin, path: '/gate-entry' },
+    ],
+    Frontdesk: [
+      { id: 'sell', label: 'Sell Pass', icon: MdConfirmationNumber, path: '/sell-pass' },
+      { id: 'bookings', label: 'Bookings List', icon: MdList, path: '/bookings' },
+      { id: 'gate', label: 'Gate Entry', icon: MdLogin, path: '/gate-entry' },
     ],
     'Gate Staff': [
       { id: 'gate', label: 'Gate Entry', icon: MdLogin, path: '/gate-entry' },
